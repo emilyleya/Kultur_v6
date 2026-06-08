@@ -65,10 +65,14 @@ function initApp() {
 
     // Marker auf Basis der frisch geladenen DB-Daten setzen
     HERITAGE_DATA.forEach(site => {
-        if (site.latitude && site.longitude) {
-            const coords = [parseFloat(site.latitude), parseFloat(site.longitude)];
+        // Wir wandeln die UNESCO-Koordinaten-Texte in echte Zahlen um
+        const lat = parseUNESCOCoordinate(site.latitude);
+        const lng = parseUNESCOCoordinate(site.longitude);
+
+        if (lat !== null && lng !== null) {
+            const coords = [lat, lng];
             const marker = createMarker(site, coords);
-            marker.addTo(map).on("click", () => selectSite(site));
+            marker.addTo(map).on("click", () => selectSite(site, coords));
         }
     });
 
@@ -77,6 +81,36 @@ function initApp() {
     renderFavList();
     setupEvents();
     initTimeSlider();
+}
+
+// Diese neue Hilfsfunktion rechnet Gradangaben (z.B. 29° 57' N) in Dezimalzahlen um
+function parseUNESCOCoordinate(coordStr) {
+    if (!coordStr) return null;
+    
+    // Wenn es bereits eine reine Zahl ist, direkt zurückgeben
+    if (!isNaN(coordStr)) return parseFloat(coordStr);
+    
+    try {
+        // Sucht nach Grad, Minuten, Sekunden und der Himmelsrichtung
+        const matches = coordStr.match(/(\d+)\s*°\s*(\d+)?\s*'\s*([\d.]+)?\s*"?\s*([NSEWnsew])/);
+        if (!matches) return parseFloat(coordStr) || null;
+        
+        const degrees = parseFloat(matches[1]);
+        const minutes = matches[2] ? parseFloat(matches[2]) / 60 : 0;
+        const seconds = matches[3] ? parseFloat(matches[3]) / 3600 : 0;
+        const direction = matches[4].toUpperCase();
+        
+        let decimal = degrees + minutes + seconds;
+        
+        // Südliche Breitengrade und westliche Längengrade müssen negativ sein
+        if (direction === 'S' || direction === 'W') {
+            decimal = -decimal;
+        }
+        
+        return decimal;
+    } catch (e) {
+        return null;
+    }
 }
 
 function createMarker(site, coords) {
