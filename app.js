@@ -23,12 +23,10 @@ let userXP         = parseInt(localStorage.getItem('chronos_xp'))  || 0;
 let favorites      = JSON.parse(localStorage.getItem('chronos_favs')) || [];
 
 // ── 3. SUPABASE ───────────────────────────────
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 async function loadSites() {
     try {
-        const { data, error } = await supabase.from('heritage_sites').select('*');
-        if (error) throw error;
+        const { data, error } = await supabaseClient.from('heritage_sites').select('*');
         sites = data;
         initApp();
     } catch (err) {
