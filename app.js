@@ -240,3 +240,4 @@ function selectSite(site, coords) {
     document.getElementById("panel-welcome").classList.remove("active");
     setTimeout(() => document.getElementById("panel-details").classList.add("active"), 300);
 }
+fetchSitesFromSupabase();
