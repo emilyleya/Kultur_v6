@@ -4,7 +4,7 @@
 // =============================================
 
 // ── 1. CONFIG ─────────────────────────────────
-const SUPABASE_URL      = 'https://mujciribnacdvoomcrjk.supabase.co';
+const SUPABASE_URL      = 'https://mujciribnacdvoomcrjk.supabase.co/rest/v1/';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11amNpcmlibmFjZHZvb21jcmprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDUzMjgsImV4cCI6MjA5NTg4MTMyOH0.6Ck0OCyzWh78P77iYj4LqGpVGOfVeC649Qf7KtZ5BDs'; // eyJ... aus Supabase Settings → API
 
 const TILE_LAYERS = {
