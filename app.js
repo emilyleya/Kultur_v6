@@ -71,11 +71,16 @@ function initApp() {
 
     activeTileLayer = L.tileLayer(TILE_LAYERS[currentTheme], { maxZoom: 19, noWrap: true }).addTo(map);
 
-    // Marker auf Basis der frisch geladenen DB-Daten setzen
+  // Marker auf Basis der frisch geladenen DB-Daten setzen
     HERITAGE_DATA.forEach(site => {
-        L.marker(site.coordinates, { icon: createMarkerIcon(site) })
-         .addTo(map)
-         .on("click", () => selectSite(site));
+        // Wir prüfen, ob Breitengrad und Längengrad existieren
+        if (site.latitude && site.longitude) {
+            const coords = [parseFloat(site.latitude), parseFloat(site.longitude)];
+            
+            L.marker(coords, { icon: createMarkerIcon(site) })
+             .addTo(map)
+             .on("click", () => selectSite(site));
+        }
     });
 
     updateXPUI();
