@@ -1,243 +1,281 @@
-// 1. Supabase Verbindung initialisieren
-const SUPABASE_URL = 'https://mujciribnacdvoomcrjk.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11amNpcmlibmFjZHZvb21jcmprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDUzMjgsImV4cCI6MjA5NTg4MTMyOH0.6Ck0OCyzWh78P77iYj4LqGpVGOfVeC649Qf7KtZ5BDs'; 
+// =============================================
+//  CHRONOS – app.js
+//  Supabase + Leaflet UNESCO Heritage Map
+// =============================================
 
-const supabase = window.supabase.createClient(https://mujciribnacdvoomcrjk.supabase.co, eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11amNpcmlibmFjZHZvb21jcmprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDUzMjgsImV4cCI6MjA5NTg4MTMyOH0.6Ck0OCyzWh78P77iYj4LqGpVGOfVeC649Qf7KtZ5BDs);
+// ── 1. CONFIG ─────────────────────────────────
+const SUPABASE_URL      = 'https://mujciribnacdvoomcrjk.supabase.co';
+const SUPABASE_ANON_KEY = 'HIER_DEINEN_ECHTEN_ANON_KEY_EINFÜGEN'; // eyJ... aus Supabase Settings → API
 
-let HERITAGE_DATA = [];
+const TILE_LAYERS = {
+    light: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
+    dark:  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+};
 
-// 2. Daten asynchron aus Supabase laden
-async function fetchSitesFromSupabase() {
+// ── 2. STATE ──────────────────────────────────
+let map            = null;
+let tileLayer      = null;
+let theme          = 'light';
+let sites          = [];
+let activeSite     = null;
+let currentView    = 'explore';s
+let userXP         = parseInt(localStorage.getItem('chronos_xp'))  || 0;
+let favorites      = JSON.parse(localStorage.getItem('chronos_favs')) || [];
+
+// ── 3. SUPABASE ───────────────────────────────
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadSites() {
     try {
-        const { data, error } = await supabase
-            .from('heritage_sites')
-            .select('*');
-
+        const { data, error } = await supabase.from('heritage_sites').select('*');
         if (error) throw error;
-
-        HERITAGE_DATA = data;
+        sites = data;
         initApp();
-        
     } catch (err) {
-        console.error("Fehler beim Laden aus Supabase:", err.message);
+        console.error('Supabase Fehler:', err.message);
     }
 }
 
-const TILE_LAYERS = {
-    light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
-    dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-};
-
-let map, activeTileLayer, currentTheme = "light";
-let userXP = parseInt(localStorage.getItem("chronos_xp_v5")) || 0;
-let favorites = JSON.parse(localStorage.getItem("chronos_favs_v5")) || [];
-let activeSite = null, currentView = "explore";
-
+// ── 4. INIT ───────────────────────────────────
 function initApp() {
-    // Falls die Karte bereits existiert, initialisiere sie nicht neu
-    if (map) return;
+    initMap();
+    addMarkers();
+    renderExploreList();
+    renderFavList();
+    updateXP();
+    bindEvents();
+}
 
-    const bounds = L.latLngBounds(L.latLng(-85,-180), L.latLng(85,180));
-    map = L.map("map", {
-        zoomControl: false, attributionControl: false,
-        minZoom: 2.3, maxBounds: bounds, maxBoundsViscosity: 1.0
+function initMap() {
+    const bounds = L.latLngBounds(L.latLng(-85, -180), L.latLng(85, 180));
+    map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false,
+        minZoom: 2.3,
+        maxBounds: bounds,
+        maxBoundsViscosity: 1.0
     }).setView([20, 10], 3);
 
-    activeTileLayer = L.tileLayer(TILE_LAYERS[currentTheme], { maxZoom: 19, noWrap: true }).addTo(map);
-
-    // Marker auf Basis der frisch geladenen DB-Daten setzen
-    HERITAGE_DATA.forEach(site => {
-        const lat = parseFlexCoordinate(site.latitude);
-        const lng = parseFlexCoordinate(site.longitude);
-
-        if (lat !== null && lng !== null) {
-            const coords = [lat, lng];
-            L.marker(coords, { icon: createMarkerIcon(site) })
-             .addTo(map)
-             .on("click", () => selectSite(site, coords));
-        }
-    });
-
-    updateXPUI();
-    renderList();
-    renderFavList();
-    setupEvents();
+    tileLayer = L.tileLayer(TILE_LAYERS[theme], { maxZoom: 19, noWrap: true }).addTo(map);
 }
 
-// Wandelt deutsche Excel-Kommas aus Supabase in Punkte um
-function parseFlexCoordinate(val) {
-    if (val === undefined || val === null) return null;
-    let str = String(val).trim();
-    if (!str) return null;
-    
-    str = str.replace(',', '.');
-    const num = parseFloat(str);
-    return isNaN(num) ? null : num;
-}
+// ── 5. MARKERS ────────────────────────────────
+function addMarkers() {
+    sites.forEach(site => {
+        const lat = parseCoord(site.latitude);
+        const lng = parseCoord(site.longitude);
+        if (lat === null || lng === null) return;
 
-function createMarkerIcon(site) {
-    return L.divIcon({
-        className: "custom-marker",
-        html: `<div class="marker-wrap"><div class="marker-core" style="background:#FF8C42"></div></div>`,
-        iconSize: [14, 14], iconAnchor: [7, 7]
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div class="marker-wrap"><div class="marker-core" style="background:#FF8C42"></div></div>`,
+            iconSize: [14, 14],
+            iconAnchor: [7, 7]
+        });
+
+        L.marker([lat, lng], { icon })
+            .addTo(map)
+            .on('click', () => showDetails(site, [lat, lng]));
     });
 }
 
-function updateXPUI() {
-    if(document.getElementById("xp-points")) document.getElementById("xp-points").textContent = userXP;
-    if(document.getElementById("xp-fill")) document.getElementById("xp-fill").style.width = `40%`;
-}
+// ── 6. LISTS ──────────────────────────────────
+function renderExploreList() {
+    const container = document.getElementById('view-explore');
+    container.innerHTML = '';
 
-function renderList() {
-    const container = document.getElementById("quick-list-container");
-    if (!container) return;
-    container.innerHTML = "";
-
-    // Zeige zur Performance die ersten 150 Welterbestätten der UNESCO
-    HERITAGE_DATA.slice(0, 150).forEach(site => {
-        const item = document.createElement("button");
-        item.className = "quick-item";
-        const siteId = site.id_no || site.unique_number;
-        const isFav = favorites.includes(siteId);
-
-        item.innerHTML = `
-            <div style="font-size: 14px; opacity: 0.5; color:#FF8C42;">●</div>
-            <div class="quick-item-body">
-                <div class="quick-item-title">${site.site || site.name_en || "Unbekannte Stätte"}</div>
-                <div class="quick-item-meta">${site.states_name_en || "Weltweit"} · Seit ${site.date_inscribed || "–"}</div>
+    sites.slice(0, 150).forEach(site => {
+        const id    = getSiteId(site);
+        const isFav = favorites.includes(id);
+        const btn   = document.createElement('button');
+        btn.className = 'site-item';
+        btn.innerHTML = `
+            <span class="site-dot">●</span>
+            <div class="site-body">
+                <div class="site-name">${site.site || site.name_en || 'Unbekannte Stätte'}</div>
+                <div class="site-meta">${site.states_name_en || 'Weltweit'} · ${site.date_inscribed || '–'}</div>
             </div>
-            <span class="quick-item-fav" style="color:#FF8C42;">${isFav ? "★" : "☆"}</span>
+            <button class="site-fav" data-id="${id}" title="Favorit">${isFav ? '★' : '☆'}</button>
         `;
 
-        item.addEventListener("click", (e) => {
-            if (e.target.classList.contains("quick-item-fav")) { toggleFav(siteId); return; }
-            const lat = parseFlexCoordinate(site.latitude);
-            const lng = parseFlexCoordinate(site.longitude);
-            if (lat !== null && lng !== null) selectSite(site, [lat, lng]);
+        btn.addEventListener('click', e => {
+            if (e.target.closest('.site-fav')) { toggleFav(id); return; }
+            const lat = parseCoord(site.latitude);
+            const lng = parseCoord(site.longitude);
+            if (lat !== null && lng !== null) showDetails(site, [lat, lng]);
+        });
+
+        container.appendChild(btn);
+    });
+}
+
+function renderFavList() {
+    const container = document.getElementById('fav-list');
+    document.getElementById('fav-count').textContent = favorites.length;
+    container.innerHTML = '';
+
+    if (favorites.length === 0) {
+        container.innerHTML = '<div class="empty-state">Noch keine Favoriten hinzugefügt.</div>';
+        return;
+    }
+
+    favorites.forEach(id => {
+        const site = sites.find(s => getSiteId(s) === id);
+        if (!site) return;
+
+        const item = document.createElement('button');
+        item.className = 'site-item';
+        item.innerHTML = `
+            <span class="site-dot">●</span>
+            <div class="site-body">
+                <div class="site-name">${site.site || site.name_en}</div>
+                <div class="site-meta">${site.states_name_en || 'Weltweit'}</div>
+            </div>
+            <button class="site-fav" data-id="${id}" title="Entfernen">✕</button>
+        `;
+
+        item.addEventListener('click', e => {
+            if (e.target.closest('.site-fav')) { toggleFav(id); return; }
+            const lat = parseCoord(site.latitude);
+            const lng = parseCoord(site.longitude);
+            if (lat !== null && lng !== null) showDetails(site, [lat, lng]);
         });
 
         container.appendChild(item);
     });
 }
 
+// ── 7. DETAILS ────────────────────────────────
+function showDetails(site, coords) {
+    activeSite = site;
+    map.flyTo(coords, 11, { duration: 1.6 });
+
+    const id = getSiteId(site);
+    document.getElementById('detail-country').textContent  = site.states_name_en || 'Weltweit';
+    document.getElementById('detail-category').textContent = site.category || 'UNESCO';
+    document.getElementById('detail-title').textContent    = site.site || site.name_en || 'Unbekannt';
+    document.getElementById('detail-meta').textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
+    document.getElementById('btn-fav').textContent         = favorites.includes(id) ? '★' : '☆';
+
+    document.getElementById('detail-description').innerHTML = `
+        <div class="content-block">
+            <div class="content-label">UNESCO Beschreibung</div>
+            <p class="content-text">${site.short_description_en || 'Keine Beschreibung vorhanden.'}</p>
+        </div>
+    `;
+
+    document.getElementById('detail-geodata').innerHTML = `
+        <div class="content-block">
+            <div class="content-label">Geografische Daten</div>
+            <p class="content-text">Fläche: ${site.area_hectares || '–'} Hektar</p>
+            <p class="content-text">Region: ${site.region_en || '–'}</p>
+            <p class="content-text">Kriterien: ${site.criteria_txt || '–'}</p>
+        </div>
+    `;
+
+    // Reset tabs to first
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector('[data-tab="tab-desc"]').classList.add('active');
+    document.getElementById('tab-desc').classList.add('active');
+
+    // Switch panels
+    document.getElementById('panel-welcome').classList.remove('active');
+    document.getElementById('panel-details').classList.add('active');
+
+    // XP reward
+    earnXP(10);
+}
+
+// ── 8. FAVORITES ──────────────────────────────
 function toggleFav(id) {
     const idx = favorites.indexOf(id);
     if (idx === -1) favorites.push(id);
     else favorites.splice(idx, 1);
-    localStorage.setItem("chronos_favs_v5", JSON.stringify(favorites));
-    if(document.getElementById("fav-count")) document.getElementById("fav-count").textContent = favorites.length;
-    renderList();
+
+    localStorage.setItem('chronos_favs', JSON.stringify(favorites));
+
+    renderExploreList();
     renderFavList();
-    if (activeSite && (activeSite.id_no === id || activeSite.unique_number === id)) {
-        if(document.getElementById("btn-favorite")) document.getElementById("btn-favorite").textContent = favorites.includes(id) ? "★" : "☆";
+
+    if (activeSite && getSiteId(activeSite) === id) {
+        document.getElementById('btn-fav').textContent = favorites.includes(id) ? '★' : '☆';
     }
 }
 
-function renderFavList() {
-    const container = document.getElementById("fav-list-container");
-    if (!container) return;
-    if(document.getElementById("fav-count")) document.getElementById("fav-count").textContent = favorites.length;
-    container.innerHTML = "";
-    if (favorites.length === 0) {
-        container.innerHTML = `<div class="empty-fav">Noch keine Favoriten</div>`;
-        return;
-    }
-    favorites.forEach(id => {
-        const site = HERITAGE_DATA.find(s => s.id_no === id || s.unique_number === id);
-        if (!site) return;
-        const item = document.createElement("div");
-        item.className = "fav-item";
-        item.innerHTML = `
-            <span style="color:#FF8C42; margin-right: 4px;">●</span>
-            <div style="flex: 1; min-width:0;">
-                <div class="fav-item-title" style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${site.site || site.name_en}</div>
-                <div class="fav-item-country" style="font-size:11px; color:var(--text-secondary);">${site.states_name_en || "Weltweit"}</div>
-            </div>
-            <span class="fav-remove" style="cursor:pointer; padding:4px;">✕</span>
-        `;
-        item.addEventListener("click", (e) => {
-            if (e.target.classList.contains("fav-remove")) { toggleFav(id); return; }
-            const lat = parseFlexCoordinate(site.latitude);
-            const lng = parseFlexCoordinate(site.longitude);
-            if (lat !== null && lng !== null) selectSite(site, [lat, lng]);
-        });
-        container.appendChild(item);
-    });
+// ── 9. XP ─────────────────────────────────────
+function earnXP(amount) {
+    userXP += amount;
+    localStorage.setItem('chronos_xp', userXP);
+    updateXP();
 }
 
-function setupEvents() {
-    document.getElementById("btn-toggle-theme").addEventListener("click", () => {
-        currentTheme = currentTheme === "light" ? "dark" : "light";
-        document.body.className = currentTheme === "dark" ? "dark-theme" : "";
-        activeTileLayer.setUrl(TILE_LAYERS[currentTheme]);
+function updateXP() {
+    document.getElementById('xp-points').textContent = userXP;
+    const pct = Math.min((userXP % 500) / 500 * 100, 100);
+    document.getElementById('xp-fill').style.width = pct + '%';
+}
+
+// ── 10. EVENTS ────────────────────────────────
+function bindEvents() {
+
+    // Theme toggle
+    document.getElementById('btn-theme').addEventListener('click', () => {
+        theme = theme === 'light' ? 'dark' : 'light';
+        document.body.className = theme === 'dark' ? 'dark' : '';
+        tileLayer.setUrl(TILE_LAYERS[theme]);
     });
 
-    document.getElementById("btn-zoom-in").addEventListener("click", () => map.zoomIn());
-    document.getElementById("btn-zoom-out").addEventListener("click", () => map.zoomOut());
+    // Zoom
+    document.getElementById('btn-zoom-in').addEventListener('click',  () => map.zoomIn());
+    document.getElementById('btn-zoom-out').addEventListener('click', () => map.zoomOut());
 
-    document.getElementById("btn-close-details").addEventListener("click", () => {
-        document.getElementById("panel-details").classList.remove("active");
-        setTimeout(() => {
-            document.getElementById("panel-welcome").classList.add("active");
-            map.flyTo([20, 10], 3, { duration: 1.5 });
-            activeSite = null;
-        }, 300);
+    // Back to overview
+    document.getElementById('btn-back').addEventListener('click', () => {
+        document.getElementById('panel-details').classList.remove('active');
+        document.getElementById('panel-welcome').classList.add('active');
+        map.flyTo([20, 10], 3, { duration: 1.5 });
+        activeSite = null;
     });
 
-    document.querySelectorAll(".tab-trigger").forEach(tab => {
-        tab.addEventListener("click", (e) => {
-            document.querySelectorAll(".tab-trigger").forEach(t => t.classList.remove("active"));
-            document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-            e.currentTarget.classList.add("active");
-            document.getElementById(e.currentTarget.dataset.tab).classList.add("active");
-        });
+    // Favorite button in details
+    document.getElementById('btn-fav').addEventListener('click', () => {
+        if (!activeSite) return;
+        toggleFav(getSiteId(activeSite));
     });
 
-    document.querySelectorAll(".nav-tab").forEach(tab => {
-        tab.addEventListener("click", (e) => {
-            document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-            e.currentTarget.classList.add("active");
+    // Nav tabs (Entdecken / Gespeichert)
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', e => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            e.currentTarget.classList.add('active');
             currentView = e.currentTarget.dataset.view;
-            document.getElementById("view-explore").style.display = currentView === "explore" ? "block" : "none";
-            document.getElementById("view-favorites").style.display = currentView === "favorites" ? "block" : "none";
+            document.getElementById('view-explore').style.display    = currentView === 'explore'   ? 'flex' : 'none';
+            document.getElementById('view-favorites').style.display  = currentView === 'favorites' ? 'block' : 'none';
+        });
+    });
+
+    // Content tabs (Beschreibung / Geodaten)
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
         });
     });
 }
 
-function selectSite(site, coords) {
-    activeSite = site;
-    map.flyTo(coords, 11, { duration: 1.6 });
-
-    const siteId = site.id_no || site.unique_number;
-    document.getElementById("site-country").textContent = site.states_name_en || "Weltweit";
-    document.getElementById("site-category").textContent = site.category || "UNESCO";
-    document.getElementById("site-title").textContent = site.site || site.name_en || "Unbekannt";
-    document.getElementById("site-meta").textContent = `Eingeschrieben seit: ${site.date_inscribed || "–"}`;
-    document.getElementById("btn-favorite").textContent = favorites.includes(siteId) ? "★" : "☆";
-
-    document.getElementById("gallery-img-active").src = `https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=80`;
-
-    document.getElementById("site-context-dynamic").innerHTML = `
-        <div class="content-section">
-            <div class="content-heading">UNESCO Beschreibung</div>
-            <p style="font-size:13px; line-height:1.6; color:var(--text-secondary);">${site.short_description_en || "Keine englische Beschreibung hinterlegt."}</p>
-        </div>
-    `;
-    
-    document.getElementById("site-details-dynamic").innerHTML = `
-        <div class="content-section">
-            <div class="content-heading">Geografische Daten</div>
-            <p style="font-size:13px; margin-bottom:4px;">Fläche: ${site.area_hectares || "0"} Hektar</p>
-            <p style="font-size:13px;">Region: ${site.region_en || "Global"} · Kriterien: ${site.criteria_txt || "–"}</p>
-        </div>
-    `;
-
-    document.querySelectorAll(".tab-trigger").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-    document.querySelector('[data-tab="tab-context"]').classList.add("active");
-    document.getElementById("tab-context").classList.add("active");
-
-    document.getElementById("panel-welcome").classList.remove("active");
-    setTimeout(() => document.getElementById("panel-details").classList.add("active"), 300);
+// ── 11. HELPERS ───────────────────────────────
+function parseCoord(val) {
+    if (val === undefined || val === null) return null;
+    const num = parseFloat(String(val).replace(',', '.'));
+    return isNaN(num) ? null : num;
 }
-fetchSitesFromSupabase();
+
+function getSiteId(site) {
+    return site.id_no ?? site.unique_number ?? null;
+}
+
+// ── START ─────────────────────────────────────
+loadSites();
