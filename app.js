@@ -145,8 +145,8 @@ function renderFavList() {
 
 // —7. WIKIPEDIA BILD ________
 Async function loadsWikipediaImage(siteName) {
-	const img = document.getElementById(´detail-img´);
-	img.style.opacity = ´0.4`;
+	const img = document.getElementById('detail-img');
+	img.style.opacity = '0.4';
 
 	try {
 	const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(siteName)}&prop=pageimages&format=json&pithumbsize=800&origin=*`;
@@ -159,8 +159,8 @@ Async function loadsWikipediaImage(siteName) {
 		img.src = page.thumbnail.source;
 	} else {
 
-	const fallbackUrl = `https://en.wikipedia.org/w/api.php?
-action=query&list=search&rsearch=${encodeURIComponent(siteName)}&prop=pageimages&format=json&origin=*`;
+	const fallbackUrl = 'https://en.wikipedia.org/w/api.php?
+action=query&list=search&rsearch=${encodeURIComponent(siteName)}&prop=pageimages&format=json&origin=*';
 	const res2 = await fetch(fallbackUrl)
 	const data2 = await res2.json();
 	const firstResult =data2.query?.[0];
@@ -175,11 +175,11 @@ action=query&titels=${encodeURIComponent(firstResult.title)}&prop=pageimages&for
 	if (page3?.thumbnail?.source) {
 		img.src = page3.thumbnail.source;
 	} else {
-		img src = ´https://images.unsplash.com/photo-155861866-fcd25c85cd64?auto=format&fit=crop&w=800&q=80´;
+		img src = 'https://images.unsplash.com/photo-155861866-fcd25c85cd64?auto=format&fit=crop&w=800&q=80';
 	}
 }
 } catch (e) {
-	img src = ´https://images.unsplash.com/photo-1558618666-fcd25c85cd64?aut0=format&fit=crop&w=800&q=80´;
+	img src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?aut0=format&fit=crop&w=800&q=80';
 	}
 
 			img.style.opacity = ´1´;
