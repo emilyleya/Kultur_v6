@@ -1,13 +1,16 @@
+/**
+ * CHRONOS Engine - Supabase Live-Cloud Edition
+ */
+
 // 1. Supabase Verbindung initialisieren
 const SUPABASE_URL = 'https://mujciribnacdvoomcrjk.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_sJdttu5UqUqDsLEyT52wqA_07I0Fs2J'; 
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Diese Variable wird dynamisch aus der Cloud befüllt
 let HERITAGE_DATA = [];
 
-// 2. Funktion: Daten asynchron aus Supabase laden
+// 2. Daten asynchron aus der Cloud laden
 async function fetchSitesFromSupabase() {
     try {
         const { data, error } = await supabase
@@ -18,38 +21,27 @@ async function fetchSitesFromSupabase() {
 
         HERITAGE_DATA = data;
         
-        // Erst wenn die Daten erfolgreich da sind, starten wir die App!
+        // App starten, sobald die Daten vollständig geladen sind
         initApp();
         
     } catch (err) {
-        console.error("Fehler beim Laden der UNESCO-Daten:", err.message);
-        alert("Datenbank-Verbindung fehlgeschlagen. Siehe Konsole.");
+        console.error("Fehler beim Laden aus Supabase:", err.message);
+        alert("Fehler bei der Datenbankverbindung: " + err.message);
     }
 }
 
-const EPOCH_COLORS = {
-    ancient:  "#a32a2a",
-    medieval: "#b8860b",
-    modern:   "#2e6f40",
-    new:      "#1b4f8a"
-};
-
+// Design-Varianten für die Basiskarte
 const TILE_LAYERS = {
-    light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
     dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
 };
 
-let map, activeTileLayer;
-let currentTheme = "light";
+let map, activeTileLayer, currentTheme = "light";
 let userXP = parseInt(localStorage.getItem("chronos_xp_v5")) || 0;
-let claimedSites = JSON.parse(localStorage.getItem("chronos_claimed_v5")) || [];
 let favorites = JSON.parse(localStorage.getItem("chronos_favs_v5")) || [];
-let activeSite = null;
-let activeFilter = "all";
-let activeSort = "default";
-let currentView = "explore";
+let activeSite = null, currentView = "explore";
 
-// 3. Den App-Start anpassen
+// Start-Trigger beim Laden des Browsers
 document.addEventListener("DOMContentLoaded", () => {
     fetchSitesFromSupabase();
 });
@@ -58,124 +50,107 @@ function initApp() {
     const bounds = L.latLngBounds(L.latLng(-85,-180), L.latLng(85,180));
     map = L.map("map", {
         zoomControl: false, attributionControl: false,
-        minZoom: 2.2, maxBounds: bounds, maxBoundsViscosity: 1.0
-    }).setView([22, 18], 3);
+        minZoom: 2.3, maxBounds: bounds, maxBoundsViscosity: 1.0
+    }).setView([20, 10], 3);
 
     activeTileLayer = L.tileLayer(TILE_LAYERS[currentTheme], { maxZoom: 19, noWrap: true }).addTo(map);
 
-    // Marker auf Basis der frisch geladenen DB-Daten setzen
+    // Marker für alle Welterbestätten auf die Karte zeichnen
     HERITAGE_DATA.forEach(site => {
-        // Wir wandeln die UNESCO-Koordinaten-Texte in echte Zahlen um
-        const lat = parseUNESCOCoordinate(site.latitude);
-        const lng = parseUNESCOCoordinate(site.longitude);
+        const lat = parseFlexCoordinate(site.latitude);
+        const lng = parseFlexCoordinate(site.longitude);
 
         if (lat !== null && lng !== null) {
             const coords = [lat, lng];
-            const marker = createMarker(site, coords);
-            marker.addTo(map).on("click", () => selectSite(site, coords));
+            L.marker(coords, { icon: createMarkerIcon(site) })
+             .addTo(map)
+             .on("click", () => selectSite(site, coords));
         }
     });
 
+    // UI-Elemente initialisieren
     updateXPUI();
     renderList();
     renderFavList();
     setupEvents();
-    initTimeSlider();
 }
 
-// Diese neue Hilfsfunktion rechnet Gradangaben (z.B. 29° 57' N) in Dezimalzahlen um
-function parseUNESCOCoordinate(coordStr) {
-    if (!coordStr) return null;
+// Bereinigt deutsche Excel-Kommas und konvertiert ungenaue Formate
+function parseFlexCoordinate(val) {
+    if (val === undefined || val === null) return null;
+    let str = String(val).trim();
+    if (!str) return null;
     
-    // Wenn es bereits eine reine Zahl ist, direkt zurückgeben
-    if (!isNaN(coordStr)) return parseFloat(coordStr);
+    // Ersetzt eventuelle deutsche Kommas durch Punkte
+    str = str.replace(',', '.');
     
-    try {
-        // Sucht nach Grad, Minuten, Sekunden und der Himmelsrichtung
-        const matches = coordStr.match(/(\d+)\s*°\s*(\d+)?\s*'\s*([\d.]+)?\s*"?\s*([NSEWnsew])/);
-        if (!matches) return parseFloat(coordStr) || null;
-        
-        const degrees = parseFloat(matches[1]);
-        const minutes = matches[2] ? parseFloat(matches[2]) / 60 : 0;
-        const seconds = matches[3] ? parseFloat(matches[3]) / 3600 : 0;
-        const direction = matches[4].toUpperCase();
-        
-        let decimal = degrees + minutes + seconds;
-        
-        // Südliche Breitengrade und westliche Längengrade müssen negativ sein
-        if (direction === 'S' || direction === 'W') {
-            decimal = -decimal;
+    // Konvertiert Grad-Schreibweisen (° ' " N/S/E/W), falls vorhanden
+    if (str.includes('°')) {
+        const matches = str.match(/(\d+)\s*°\s*(\d+)?\s*'\s*([\d.]+)?\s*"?\s*([NSEWnsew])/);
+        if (matches) {
+            const degrees = parseFloat(matches[1]);
+            const minutes = matches[2] ? parseFloat(matches[2]) / 60 : 0;
+            const seconds = matches[3] ? parseFloat(matches[3]) / 3600 : 0;
+            const direction = matches[4].toUpperCase();
+            let decimal = degrees + minutes + seconds;
+            if (direction === 'S' || direction === 'W') decimal = -decimal;
+            return decimal;
         }
-        
-        return decimal;
-    } catch (e) {
-        return null;
     }
+    
+    const num = parseFloat(str);
+    return isNaN(num) ? null : num;
 }
 
-function createMarker(site, coords) {
-    // Falls die Kategorie "wonder" im Feld 'category' vorkommt
-    if (site.category && site.category.toLowerCase().includes("wonder")) {
-        const icon = L.divIcon({
+// Marker-Icons erzeugen
+function createMarkerIcon(site) {
+    const isWonder = site.category && site.category.toLowerCase().includes("wonder");
+    if (isWonder) {
+        return L.divIcon({
             className: "wonder-marker",
-            html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div><div class="wonder-ring"></div></div>`,
-            iconSize: [24, 24], iconAnchor: [12, 12]
+            html: `<div class="wonder-wrap"><div class="wonder-star">★</div></div>`,
+            iconSize: [16, 16], iconAnchor: [8, 8]
         });
-        return L.marker(coords, { icon });
-    } else {
-        const icon = L.divIcon({
-            className: "custom-marker",
-            html: `<div class="marker-wrap">
-                     <div class="marker-core" style="background:var(--theme-medieval)"></div>
-                     <div class="marker-ring" style="background:var(--theme-medieval)33"></div>
-                   </div>`,
-            iconSize: [18, 18], iconAnchor: [9, 9]
-        });
-        return L.marker(coords, { icon });
     }
+    return L.divIcon({
+        className: "custom-marker",
+        html: `<div class="marker-wrap"><div class="marker-core" style="background:#8B6914"></div></div>`,
+        iconSize: [14, 14], iconAnchor: [7, 7]
+    });
 }
 
 function updateXPUI() {
     if(document.getElementById("xp-points")) document.getElementById("xp-points").textContent = userXP;
-    const ranks = [[0,"Novize"],[150,"Entdecker"],[300,"Analyst"],[600,"Elite-Forscher"],[900,"Groß-Archivar"]];
-    let rank = "Novize";
-    for (const [threshold, name] of ranks) { if (userXP >= threshold) rank = name; }
-    if(document.getElementById("rank-badge")) document.getElementById("rank-badge").textContent = rank;
-    if(document.getElementById("xp-bar-fill")) document.getElementById("xp-bar-fill").style.width = `${Math.min((userXP/900)*100,100)}%`;
+    const maxPossibleXP = HERITAGE_DATA.length * 150 || 1000;
+    if(document.getElementById("xp-fill")) document.getElementById("xp-fill").style.width = `${Math.min((userXP / maxPossibleXP) * 100, 100)}%`;
 }
 
-function getFilteredSorted() {
-    let data = [...HERITAGE_DATA];
-    if (activeSort === "name") data.sort((a,b) => (a.site || "").localeCompare(b.site || "", "de"));
-    return data;
-}
-
+// Linke Übersichtsliste rendern (Performance-optimiert auf die ersten 150 Einträge)
 function renderList() {
     const container = document.getElementById("quick-list-container");
     if (!container) return;
-    const data = getFilteredSorted();
     container.innerHTML = "";
-    if (data.length === 0) {
-        container.innerHTML = `<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px;font-style:italic">Keine Stätten vorhanden.</p>`;
-        return;
-    }
-    data.forEach(site => {
+
+    HERITAGE_DATA.slice(0, 150).forEach(site => {
         const item = document.createElement("button");
         item.className = "quick-item";
-        const isFav = favorites.includes(site.id || site.id_no);
+        const siteId = site.id_no || site.id;
+        const isFav = favorites.includes(siteId);
 
         item.innerHTML = `
-            <div class="quick-item-icon">●</div>
+            <div style="font-size: 14px; opacity: 0.5;">●</div>
             <div class="quick-item-body">
-                <div class="quick-item-title">${site.site || "Unbekannt"}</div>
-                <div class="quick-item-meta">${site.states || "Unbekannt"} · Welterbe seit: ${site.date_inscribed || "–"}</div>
+                <div class="quick-item-title">${site.site || site.name_en || "Unbekannte Stätte"}</div>
+                <div class="quick-item-meta">${site.states_name_en || "Weltweit"} · Seit ${site.date_inscribed || "–"}</div>
             </div>
-            <span class="fav-star-mini ${isFav ? 'active' : ''}">★</span>
+            <span class="quick-item-fav">${isFav ? "★" : "☆"}</span>
         `;
 
         item.addEventListener("click", (e) => {
-            if (e.target.classList.contains("fav-star-mini")) { toggleFav(site.id || site.id_no); return; }
-            selectSite(site);
+            if (e.target.classList.contains("quick-item-fav")) { toggleFav(siteId); return; }
+            const lat = parseFlexCoordinate(site.latitude);
+            const lng = parseFlexCoordinate(site.longitude);
+            if (lat !== null && lng !== null) selectSite(site, [lat, lng]);
         });
 
         container.appendChild(item);
@@ -187,37 +162,47 @@ function toggleFav(id) {
     if (idx === -1) favorites.push(id);
     else favorites.splice(idx, 1);
     localStorage.setItem("chronos_favs_v5", JSON.stringify(favorites));
+    if(document.getElementById("fav-count")) document.getElementById("fav-count").textContent = favorites.length;
     renderList();
     renderFavList();
+    if (activeSite && (activeSite.id_no === id || activeSite.id === id)) {
+        if(document.getElementById("btn-favorite")) document.getElementById("btn-favorite").textContent = favorites.includes(id) ? "★" : "☆";
+    }
 }
 
 function renderFavList() {
     const container = document.getElementById("fav-list-container");
     if (!container) return;
+    if(document.getElementById("fav-count")) document.getElementById("fav-count").textContent = favorites.length;
     container.innerHTML = "";
     if (favorites.length === 0) {
-        container.innerHTML = `<div class="empty-fav">Noch keine Lesezeichen gesetzt.</div>`;
+        container.innerHTML = `<div class="empty-fav">Noch keine Favoriten</div>`;
         return;
     }
     favorites.forEach(id => {
-        const site = HERITAGE_DATA.find(s => (s.id || s.id_no) === id);
+        const site = HERITAGE_DATA.find(s => s.id_no === id || s.id === id);
         if (!site) return;
         const item = document.createElement("div");
         item.className = "fav-item";
         item.innerHTML = `
-            <span style="font-size:13px; color:var(--text-muted)">●</span>
-            <span class="fav-item-title">${site.site || "Unbekannt"}</span>
-            <span class="fav-item-country">${site.states || "Unbekannt"}</span>
+            <span style="opacity: 0.6; margin-right: 4px;">●</span>
+            <div style="flex: 1;">
+                <div class="fav-item-title">${site.site || site.name_en}</div>
+                <div class="fav-item-country">${site.states_name_en || "Weltweit"}</div>
+            </div>
             <span class="fav-remove">✕</span>
         `;
         item.addEventListener("click", (e) => {
             if (e.target.classList.contains("fav-remove")) { toggleFav(id); return; }
-            selectSite(site);
+            const lat = parseFlexCoordinate(site.latitude);
+            const lng = parseFlexCoordinate(site.longitude);
+            if (lat !== null && lng !== null) selectSite(site, [lat, lng]);
         });
         container.appendChild(item);
     });
 }
 
+// Event-Listener für Buttons und Navigationsreiter
 function setupEvents() {
     document.getElementById("btn-toggle-theme").addEventListener("click", () => {
         currentTheme = currentTheme === "light" ? "dark" : "light";
@@ -232,7 +217,7 @@ function setupEvents() {
         document.getElementById("panel-details").classList.remove("active");
         setTimeout(() => {
             document.getElementById("panel-welcome").classList.add("active");
-            map.flyTo([22, 18], 3, { duration: 1.2 });
+            map.flyTo([20, 10], 3, { duration: 1.5 });
             activeSite = null;
         }, 300);
     });
@@ -257,306 +242,47 @@ function setupEvents() {
     });
 
     document.getElementById("btn-favorite").addEventListener("click", () => {
-        if (activeSite) toggleFav(activeSite.id || activeSite.id_no);
+        if (activeSite) toggleFav(activeSite.id_no || activeSite.id);
     });
 }
 
-function selectSite(site) {
+// Detail-Panel befüllen, wenn ein Ort angeklickt wird
+function selectSite(site, coords) {
     activeSite = site;
-    const coords = [parseUNESCOCoordinate(site.latitude), parseUNESCOCoordinate(site.longitude)];
+    map.flyTo(coords, 11, { duration: 1.6 });
 
-    document.getElementById("site-country").textContent = site.states || "Unbekannt";
-    document.getElementById("site-category").textContent = "UNESCO Welterbe";
-    document.getElementById("site-title").textContent = site.site || "Unbekannt";
-    document.getElementById("site-year").textContent = `Aufnahmejahr: ${site.date_inscribed || "–"}`;
+    const siteId = site.id_no || site.id;
+    document.getElementById("site-country").textContent = site.states_name_en || "Weltweit";
+    document.getElementById("site-category").textContent = site.category || "UNESCO";
+    document.getElementById("site-title").textContent = site.site || site.name_en || "Unbekannt";
+    document.getElementById("site-meta").textContent = `Eingeschrieben seit: ${site.date_inscribed || "–"}`;
+    document.getElementById("btn-favorite").textContent = favorites.includes(siteId) ? "★" : "☆";
 
-    document.getElementById("btn-favorite").textContent = favorites.includes(site.id || site.id_no) ? "★" : "☆";
+    // Unsplash Platzhalter-Bild
+    document.getElementById("gallery-img-active").src = `https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=80`;
 
-    const mainImg = document.getElementById("gallery-img-active");
-    // Da die UNESCO-Tabelle keine Bild-URLs hat, nutzen wir ein Platzhalterbild basierend auf dem Namen
-    mainImg.src = `https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=80`;
-    
     document.getElementById("site-context-dynamic").innerHTML = `
-        <div class="info-section-title">UNESCO Beschreibung</div>
-        <p class="body-text">${site.short_description || "Keine Beschreibung verfügbar."}</p>
-        <div class="source-box">Kategorie: ${site.category || "Kulturerbe"} · Region: ${site.region_en || "Global"}</div>
+        <div class="content-text">
+            <div class="content-heading">UNESCO Beschreibung</div>
+            <p>${site.short_description_en || "Keine Kurzbeschreibung in der Datenbank vorhanden."}</p>
+            <div class="source-attribution">Region: ${site.region_en || "Global"} · Kriterien: ${site.criteria_txt || "–"}</div>
+        </div>
     `;
     
-    document.getElementById("site-anecdote-text").textContent = `Diese Stätte erfüllt die UNESCO-Kriterien Nummer: ${site.criteria_txt || "–"}`;
-
-    document.getElementById("panel-welcome").classList.remove("active");
-    setTimeout(() => document.getElementById("panel-details").classList.add("active"), 200);
-}
-
-function initTimeSlider() {
-    const slider = document.getElementById("time-slider");
-    const label = document.getElementById("time-label");
-    if(slider && label) {
-        slider.addEventListener("input", (e) => {
-            label.textContent = e.target.value == 0 ? "Gegenwart" : `Zeitreise`;
-        });
-    }
-}const TILE_LAYERS = {
-    light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-};
-
-let map, activeTileLayer;
-let currentTheme = "light";
-let userXP = parseInt(localStorage.getItem("chronos_xp_v5")) || 0;
-let claimedSites = JSON.parse(localStorage.getItem("chronos_claimed_v5")) || [];
-let favorites = JSON.parse(localStorage.getItem("chronos_favs_v5")) || [];
-let activeSite = null;
-let activeFilter = "all";
-let activeSort = "default";
-let currentView = "explore";
-
-// 3. Den App-Start anpassen
-document.addEventListener("DOMContentLoaded", () => {
-    fetchSitesFromSupabase();
-});
-
-function initApp() {
-    const bounds = L.latLngBounds(L.latLng(-85,-180), L.latLng(85,180));
-    map = L.map("map", {
-        zoomControl: false, attributionControl: false,
-        minZoom: 2.2, maxBounds: bounds, maxBoundsViscosity: 1.0
-    }).setView([22, 18], 3);
-
-    activeTileLayer = L.tileLayer(TILE_LAYERS[currentTheme], { maxZoom: 19, noWrap: true }).addTo(map);
-
-    // Marker auf Basis der frisch geladenen DB-Daten setzen
-    HERITAGE_DATA.forEach(site => {
-        // Wir wandeln die UNESCO-Koordinaten-Texte in echte Zahlen um
-        const lat = parseUNESCOCoordinate(site.latitude);
-        const lng = parseUNESCOCoordinate(site.longitude);
-
-        if (lat !== null && lng !== null) {
-            const coords = [lat, lng];
-            const marker = createMarker(site, coords);
-            marker.addTo(map).on("click", () => selectSite(site, coords));
-        }
-    });
-
-    updateXPUI();
-    renderList();
-    renderFavList();
-    setupEvents();
-    initTimeSlider();
-}
-
-// Diese neue Hilfsfunktion rechnet Gradangaben (z.B. 29° 57' N) in Dezimalzahlen um
-function parseUNESCOCoordinate(coordStr) {
-    if (!coordStr) return null;
-    
-    // Wenn es bereits eine reine Zahl ist, direkt zurückgeben
-    if (!isNaN(coordStr)) return parseFloat(coordStr);
-    
-    try {
-        // Sucht nach Grad, Minuten, Sekunden und der Himmelsrichtung
-        const matches = coordStr.match(/(\d+)\s*°\s*(\d+)?\s*'\s*([\d.]+)?\s*"?\s*([NSEWnsew])/);
-        if (!matches) return parseFloat(coordStr) || null;
-        
-        const degrees = parseFloat(matches[1]);
-        const minutes = matches[2] ? parseFloat(matches[2]) / 60 : 0;
-        const seconds = matches[3] ? parseFloat(matches[3]) / 3600 : 0;
-        const direction = matches[4].toUpperCase();
-        
-        let decimal = degrees + minutes + seconds;
-        
-        // Südliche Breitengrade und westliche Längengrade müssen negativ sein
-        if (direction === 'S' || direction === 'W') {
-            decimal = -decimal;
-        }
-        
-        return decimal;
-    } catch (e) {
-        return null;
-    }
-}
-
-function createMarker(site, coords) {
-    // Falls die Kategorie "wonder" im Feld 'category' vorkommt
-    if (site.category && site.category.toLowerCase().includes("wonder")) {
-        const icon = L.divIcon({
-            className: "wonder-marker",
-            html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div><div class="wonder-ring"></div></div>`,
-            iconSize: [24, 24], iconAnchor: [12, 12]
-        });
-        return L.marker(coords, { icon });
-    } else {
-        const icon = L.divIcon({
-            className: "custom-marker",
-            html: `<div class="marker-wrap">
-                     <div class="marker-core" style="background:var(--theme-medieval)"></div>
-                     <div class="marker-ring" style="background:var(--theme-medieval)33"></div>
-                   </div>`,
-            iconSize: [18, 18], iconAnchor: [9, 9]
-        });
-        return L.marker(coords, { icon });
-    }
-}
-
-function updateXPUI() {
-    if(document.getElementById("xp-points")) document.getElementById("xp-points").textContent = userXP;
-    const ranks = [[0,"Novize"],[150,"Entdecker"],[300,"Analyst"],[600,"Elite-Forscher"],[900,"Groß-Archivar"]];
-    let rank = "Novize";
-    for (const [threshold, name] of ranks) { if (userXP >= threshold) rank = name; }
-    if(document.getElementById("rank-badge")) document.getElementById("rank-badge").textContent = rank;
-    if(document.getElementById("xp-bar-fill")) document.getElementById("xp-bar-fill").style.width = `${Math.min((userXP/900)*100,100)}%`;
-}
-
-function getFilteredSorted() {
-    let data = [...HERITAGE_DATA];
-    if (activeSort === "name") data.sort((a,b) => (a.site || "").localeCompare(b.site || "", "de"));
-    return data;
-}
-
-function renderList() {
-    const container = document.getElementById("quick-list-container");
-    if (!container) return;
-    const data = getFilteredSorted();
-    container.innerHTML = "";
-    if (data.length === 0) {
-        container.innerHTML = `<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px;font-style:italic">Keine Stätten vorhanden.</p>`;
-        return;
-    }
-    data.forEach(site => {
-        const item = document.createElement("button");
-        item.className = "quick-item";
-        const isFav = favorites.includes(site.id || site.id_no);
-
-        item.innerHTML = `
-            <div class="quick-item-icon">●</div>
-            <div class="quick-item-body">
-                <div class="quick-item-title">${site.site || "Unbekannt"}</div>
-                <div class="quick-item-meta">${site.states || "Unbekannt"} · Welterbe seit: ${site.date_inscribed || "–"}</div>
-            </div>
-            <span class="fav-star-mini ${isFav ? 'active' : ''}">★</span>
-        `;
-
-        item.addEventListener("click", (e) => {
-            if (e.target.classList.contains("fav-star-mini")) { toggleFav(site.id || site.id_no); return; }
-            selectSite(site);
-        });
-
-        container.appendChild(item);
-    });
-}
-
-function toggleFav(id) {
-    const idx = favorites.indexOf(id);
-    if (idx === -1) favorites.push(id);
-    else favorites.splice(idx, 1);
-    localStorage.setItem("chronos_favs_v5", JSON.stringify(favorites));
-    renderList();
-    renderFavList();
-}
-
-function renderFavList() {
-    const container = document.getElementById("fav-list-container");
-    if (!container) return;
-    container.innerHTML = "";
-    if (favorites.length === 0) {
-        container.innerHTML = `<div class="empty-fav">Noch keine Lesezeichen gesetzt.</div>`;
-        return;
-    }
-    favorites.forEach(id => {
-        const site = HERITAGE_DATA.find(s => (s.id || s.id_no) === id);
-        if (!site) return;
-        const item = document.createElement("div");
-        item.className = "fav-item";
-        item.innerHTML = `
-            <span style="font-size:13px; color:var(--text-muted)">●</span>
-            <span class="fav-item-title">${site.site || "Unbekannt"}</span>
-            <span class="fav-item-country">${site.states || "Unbekannt"}</span>
-            <span class="fav-remove">✕</span>
-        `;
-        item.addEventListener("click", (e) => {
-            if (e.target.classList.contains("fav-remove")) { toggleFav(id); return; }
-            selectSite(site);
-        });
-        container.appendChild(item);
-    });
-}
-
-function setupEvents() {
-    document.getElementById("btn-toggle-theme").addEventListener("click", () => {
-        currentTheme = currentTheme === "light" ? "dark" : "light";
-        document.body.className = currentTheme === "dark" ? "dark-theme" : "";
-        activeTileLayer.setUrl(TILE_LAYERS[currentTheme]);
-    });
-
-    document.getElementById("btn-zoom-in").addEventListener("click", () => map.zoomIn());
-    document.getElementById("btn-zoom-out").addEventListener("click", () => map.zoomOut());
-
-    document.getElementById("btn-close-details").addEventListener("click", () => {
-        document.getElementById("panel-details").classList.remove("active");
-        setTimeout(() => {
-            document.getElementById("panel-welcome").classList.add("active");
-            map.flyTo([22, 18], 3, { duration: 1.2 });
-            activeSite = null;
-        }, 300);
-    });
-
-    document.querySelectorAll(".tab-trigger").forEach(tab => {
-        tab.addEventListener("click", (e) => {
-            document.querySelectorAll(".tab-trigger").forEach(t => t.classList.remove("active"));
-            document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-            e.currentTarget.classList.add("active");
-            document.getElementById(e.currentTarget.dataset.tab).classList.add("active");
-        });
-    });
-
-    document.querySelectorAll(".nav-tab").forEach(tab => {
-        tab.addEventListener("click", (e) => {
-            document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-            e.currentTarget.classList.add("active");
-            currentView = e.currentTarget.dataset.view;
-            document.getElementById("view-explore").style.display = currentView === "explore" ? "block" : "none";
-            document.getElementById("view-favorites").style.display = currentView === "favorites" ? "block" : "none";
-        });
-    });
-
-    document.getElementById("btn-favorite").addEventListener("click", () => {
-        if (activeSite) toggleFav(activeSite.id || activeSite.id_no);
-    });
-}
-
-function selectSite(site) {
-    activeSite = site;
-    const coords = [parseFloat(site.latitude), parseFloat(site.longitude)];
-    map.flyTo(coords, 14, { duration: 1.4 });
-
-    document.getElementById("site-country").textContent = site.states || "Unbekannt";
-    document.getElementById("site-category").textContent = "UNESCO Welterbe";
-    document.getElementById("site-title").textContent = site.site || "Unbekannt";
-    document.getElementById("site-year").textContent = `Aufnahmejahr: ${site.date_inscribed || "–"}`;
-
-    document.getElementById("btn-favorite").textContent = favorites.includes(site.id || site.id_no) ? "★" : "☆";
-
-    const mainImg = document.getElementById("gallery-img-active");
-    // Da die UNESCO-Tabelle keine Bild-URLs hat, nutzen wir ein Platzhalterbild basierend auf dem Namen
-    mainImg.src = `https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=80`;
-    
-    document.getElementById("site-context-dynamic").innerHTML = `
-        <div class="info-section-title">UNESCO Beschreibung</div>
-        <p class="body-text">${site.short_description || "Keine Beschreibung verfügbar."}</p>
-        <div class="source-box">Kategorie: ${site.category || "Kulturerbe"} · Region: ${site.region_en || "Global"}</div>
+    document.getElementById("site-details-dynamic").innerHTML = `
+        <div class="content-text">
+            <div class="content-heading">Geografische Daten</div>
+            <p>Fläche: ${site.area_hectares || "0"} Hektar</p>
+            <p>Koordinaten im System: ${site.latitude} / ${site.longitude}</p>
+        </div>
     `;
-    
-    document.getElementById("site-anecdote-text").textContent = `Diese Stätte erfüllt die UNESCO-Kriterien Nummer: ${site.criteria_txt || "–"}`;
+
+    // Tabs auf Standard zurücksetzen
+    document.querySelectorAll(".tab-trigger").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.querySelector('[data-tab="tab-context"]').classList.add("active");
+    document.getElementById("tab-context").classList.add("active");
 
     document.getElementById("panel-welcome").classList.remove("active");
-    setTimeout(() => document.getElementById("panel-details").classList.add("active"), 200);
-}
-
-function initTimeSlider() {
-    const slider = document.getElementById("time-slider");
-    const label = document.getElementById("time-label");
-    if(slider && label) {
-        slider.addEventListener("input", (e) => {
-            label.textContent = e.target.value == 0 ? "Gegenwart" : `Zeitreise`;
-        });
-    }
+    setTimeout(() => document.getElementById("panel-details").classList.add("active"), 300);
 }
