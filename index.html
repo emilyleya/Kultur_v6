@@ -7,7 +7,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?
+<link rel="stylesheet" href="style.css">
+family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
            CHRONOS v5 – MODERN EARTHY DESIGN WITH RUST ACCENT
@@ -35,6 +37,158 @@
             --shadow-lg:       0 12px 32px rgba(0, 0, 0, 0.5);
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Geist', sans-serif; background: var(--bg); color: var(--text); }
+
+        #map { position: absolute; inset: 0; z-index: 1; background: var(--bg); }
+
+        .app-header {
+            position: absolute; top: 12px; left: 12px; right: 12px; height: 64px;
+            background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--border);
+            border-radius: 14px; z-index: 20; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: var(--shadow);
+        }
+        .header-logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+        .header-subtitle { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+        .xp-display { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+        .xp-value { font-size: 14px; font-weight: 700; color: var(--accent); }
+        .xp-bar { width: 140px; height: 4px; background: var(--surface-dark); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+        .xp-fill { height: 100%; width: 50%; background: var(--accent); transition: width 0.5s; }
+
+        .main-container { position: absolute; top: 88px; left: 12px; bottom: 12px; width: 440px; z-index: 10; pointer-events: none; }
+        .story-sidebar { width: 100%; height: 100%; background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 18px; padding: 24px; overflow-y: auto; pointer-events: auto; box-shadow: var(--shadow-lg); }
+        
+        .panel-state { display: none; }
+        .panel-state.active { display: block; }
+
+        .welcome-header { margin-bottom: 20px; }
+        .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+        h2 { font-size: 24px; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
+        .lead-text { font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px; }
+
+        .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; }
+        .chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+        .nav-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .nav-tab { padding: 6px 12px; border: none; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
+        .nav-tab.active { color: var(--text); border-bottom: 2px solid var(--text); border-radius: 0; }
+
+        .quick-list { display: flex; flex-direction: column; gap: 8px; }
+        .quick-item { width: 100%; background: var(--surface-dark); border: 1px solid var(--border); border-radius: 11px; padding: 12px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 12px; }
+        .quick-item-body { flex: 1; min-width: 0; }
+        .quick-item-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .quick-item-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+        .back-btn { background: transparent; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 16px; }
+        .site-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: var(--surface-dark); border: 1px solid var(--border); color: var(--text-secondary); }
+        .site-meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+        
+        .gallery-wrapper { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; }
+        .gallery-main { width: 100%; height: 180px; object-fit: cover; display: block; }
+
+        .tabs-nav { display: flex; background: var(--surface-dark); border: 1px solid var(--border); padding: 2px; border-radius: 8px; margin-bottom: 14px; }
+        .tab-trigger { flex: 1; background: transparent; border: none; color: var(--text-secondary); font-size: 12px; padding: 6px 0; border-radius: 6px; cursor: pointer; }
+        .tab-trigger.active { background: var(--surface); color: var(--text); font-weight: 600; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .content-text { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
+        .content-heading { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 6px; text-transform: uppercase; }
+
+        .map-controls { position: absolute; bottom: 20px; right: 20px; z-index: 20; display: flex; flex-direction: column; gap: 6px; }
+        .ctrl-btn { width: 38px; height: 38px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: var(--shadow); }
+
+        /* MARKERS */
+        .custom-marker { background: none; border: none; }
+        .marker-wrap { position: relative; width: 14px; height: 14px; }
+        .marker-core { width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; position: absolute; top: 2px; left: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <header class="app-header">
+        <div>
+            <div class="header-logo">CHRONOS</div>
+            <div class="header-subtitle">Globales Welterbe</div>
+        </div>
+        <div class="header-right">
+            <div class="xp-display">
+                <div class="xp-value"><span id="rank-badge">Archivar</span> · <span id="xp-points">0</span> XP</div>
+                <div class="xp-bar"><div id="xp-fill" class="xp-fill"></div></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="story-sidebar">
+            <div id="panel-welcome" class="panel-state active">
+                <div class="welcome-header">
+                    <div class="section-label">Erkunde Welterbe</div>
+                    <h2>Die Stätten der Welt</h2>
+                    <p class="lead-text">Entdecke UNESCO-Welterbestätten direkt aus der Cloud-Datenbank.</p>
+                </div>
+
+                <div class="nav-tabs">
+                    <button class="nav-tab active" data-view="explore">Entdecken</button>
+                    <button class="nav-tab" data-view="favorites">Gespeichert (<span id="fav-count">0</span>)</button>
+                </div>
+
+                <div id="view-explore" class="view-panel">
+                    <div id="quick-list-container" class="quick-list"></div>
+                </div>
+
+                <div id="view-favorites" class="view-panel" style="display: none;">
+                    <div id="fav-list-container" class="quick-list">
+                        <div class="empty-fav">Noch keine Favoriten hinzugefügt.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-details" class="panel-state">
+                <button class="back-btn" id="btn-close-details">← Zurück zur Übersicht</button>
+                <div class="site-header">
+                    <div class="site-badges">
+                        <span id="site-country" class="badge">–</span>
+                        <span id="site-category" class="badge">–</span>
+                    </div>
+                    <button id="btn-favorite" style="background:none; border:none; font-size:20px; cursor:pointer;">☆</button>
+                </div>
+                <h2 id="site-title" style="margin-bottom:8px;">–</h2>
+                <div id="site-meta" class="site-meta">–</div>
+
+                <div class="gallery-wrapper">
+                    <img id="gallery-img-active" class="gallery-main" src="" alt="Welterbe">
+                </div>
+
+                <div class="tabs-nav">
+                    <button class="tab-trigger active" data-tab="tab-context">Beschreibung</button>
+                    <button class="tab-trigger" data-tab="tab-details">Geodaten</button>
+                </div>
+
+                <div id="tab-context" class="tab-panel active">
+                    <div id="site-context-dynamic" class="content-text"></div>
+                </div>
+                <div id="tab-details" class="tab-panel">
+                    <div id="site-details-dynamic" class="content-text"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="map-controls">
+        <button id="btn-toggle-theme" class="ctrl-btn">🌗</button>
+        <button id="btn-zoom-in" class="ctrl-btn">+</button>
+        <button id="btn-zoom-out" class="ctrl-btn">−</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Geist', sans-serif; background: var(--bg); color: var(--text); }
 
