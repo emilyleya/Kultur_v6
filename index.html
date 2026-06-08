@@ -4,340 +4,524 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHRONOS – Globales Welterbe</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?
-<link rel="stylesheet" href="style.css">
-family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        /* ============================================================
-           CHRONOS v5 – MODERN EARTHY DESIGN WITH RUST ACCENT
-           ============================================================ */
+        /* =============================================
+           DESIGN TOKENS
+        ============================================= */
         :root {
-            --bg:              #FBF8F3;
-            --surface:         rgba(251, 248, 243, 0.94);
-            --surface-dark:    #F5EFEA;
-            --border:          rgba(139, 123, 111, 0.15);
-            --text:            #3E3530;
-            --text-secondary:  #8B7B6F;
-            --accent:          #FF8C42;
-            --shadow:          0 4px 16px rgba(0, 0, 0, 0.04);
-            --shadow-lg:       0 12px 32px rgba(0, 0, 0, 0.08);
+            --bg:             #FBF8F3;
+            --surface:        rgba(251, 248, 243, 0.96);
+            --surface-inset:  #F5EFEA;
+            --border:         rgba(139, 123, 111, 0.18);
+            --text:           #3E3530;
+            --text-muted:     #8B7B6F;
+            --accent:         #FF8C42;
+            --shadow-sm:      0 2px 8px rgba(0,0,0,0.04);
+            --shadow-md:      0 8px 24px rgba(0,0,0,0.07);
+            --shadow-lg:      0 16px 48px rgba(0,0,0,0.10);
+            --radius-sm:      8px;
+            --radius-md:      12px;
+            --radius-lg:      18px;
         }
 
-        body.dark-theme {
-            --bg:              #1A1510;
-            --surface:         rgba(26, 21, 16, 0.94);
-            --surface-dark:    rgba(255, 140, 66, 0.05);
-            --border:          rgba(239, 229, 219, 0.12);
-            --text:            #FFFFFF;
-            --text-secondary:  #EFE5DB;
-            --shadow:          0 4px 16px rgba(0, 0, 0, 0.3);
-            --shadow-lg:       0 12px 32px rgba(0, 0, 0, 0.5);
+        body.dark {
+            --bg:             #141210;
+            --surface:        rgba(22, 18, 14, 0.96);
+            --surface-inset:  rgba(255, 140, 66, 0.06);
+            --border:         rgba(255, 255, 255, 0.10);
+            --text:           #F5F0EB;
+            --text-muted:     #A89D94;
+            --shadow-sm:      0 2px 8px rgba(0,0,0,0.3);
+            --shadow-md:      0 8px 24px rgba(0,0,0,0.4);
+            --shadow-lg:      0 16px 48px rgba(0,0,0,0.6);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Geist', sans-serif; background: var(--bg); color: var(--text); }
+        /* =============================================
+           RESET & BASE
+        ============================================= */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        #map { position: absolute; inset: 0; z-index: 1; background: var(--bg); }
-
-        .app-header {
-            position: absolute; top: 12px; left: 12px; right: 12px; height: 64px;
-            background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--border);
-            border-radius: 14px; z-index: 20; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: var(--shadow);
+        html, body {
+            width: 100%; height: 100%; overflow: hidden;
+            font-family: 'Geist', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.3s, color 0.3s;
         }
-        .header-logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
-        .header-subtitle { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
-        .xp-display { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-        .xp-value { font-size: 14px; font-weight: 700; color: var(--accent); }
-        .xp-bar { width: 140px; height: 4px; background: var(--surface-dark); border-radius: 2px; overflow: hidden; margin-top: 4px; }
-        .xp-fill { height: 100%; width: 50%; background: var(--accent); transition: width 0.5s; }
 
-        .main-container { position: absolute; top: 88px; left: 12px; bottom: 12px; width: 440px; z-index: 10; pointer-events: none; }
-        .story-sidebar { width: 100%; height: 100%; background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 18px; padding: 24px; overflow-y: auto; pointer-events: auto; box-shadow: var(--shadow-lg); }
-        
-        .panel-state { display: none; }
-        .panel-state.active { display: block; }
+        button { font-family: inherit; cursor: pointer; }
 
-        .welcome-header { margin-bottom: 20px; }
-        .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
-        h2 { font-size: 24px; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
-        .lead-text { font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px; }
+        /* =============================================
+           MAP
+        ============================================= */
+        #map {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: var(--bg);
+        }
 
-        .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-        .chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; }
-        .chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+        /* =============================================
+           HEADER
+        ============================================= */
+        .header {
+            position: absolute;
+            top: 12px; left: 12px; right: 12px;
+            height: 60px;
+            z-index: 20;
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+        }
 
-        .nav-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        .nav-tab { padding: 6px 12px; border: none; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
-        .nav-tab.active { color: var(--text); border-bottom: 2px solid var(--text); border-radius: 0; }
+        .header-logo {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: var(--text);
+        }
 
-        .quick-list { display: flex; flex-direction: column; gap: 8px; }
-        .quick-item { width: 100%; background: var(--surface-dark); border: 1px solid var(--border); border-radius: 11px; padding: 12px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 12px; }
-        .quick-item-body { flex: 1; min-width: 0; }
-        .quick-item-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .quick-item-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+        .header-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
 
-        .back-btn { background: transparent; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 16px; }
-        .site-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-        .badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: var(--surface-dark); border: 1px solid var(--border); color: var(--text-secondary); }
-        .site-meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
-        
-        .gallery-wrapper { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; }
-        .gallery-main { width: 100%; height: 180px; object-fit: cover; display: block; }
+        .header-xp {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
 
-        .tabs-nav { display: flex; background: var(--surface-dark); border: 1px solid var(--border); padding: 2px; border-radius: 8px; margin-bottom: 14px; }
-        .tab-trigger { flex: 1; background: transparent; border: none; color: var(--text-secondary); font-size: 12px; padding: 6px 0; border-radius: 6px; cursor: pointer; }
-        .tab-trigger.active { background: var(--surface); color: var(--text); font-weight: 600; }
+        .xp-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .xp-bar {
+            width: 120px;
+            height: 3px;
+            background: var(--surface-inset);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .xp-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.5s ease;
+        }
+
+        /* =============================================
+           SIDEBAR
+        ============================================= */
+        .sidebar {
+            position: absolute;
+            top: 84px; left: 12px; bottom: 12px;
+            width: 420px;
+            z-index: 10;
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        /* =============================================
+           PANELS (welcome / details)
+        ============================================= */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* =============================================
+           WELCOME PANEL
+        ============================================= */
+        .welcome-tag {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .welcome-title {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        .welcome-lead {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+
+        /* Nav tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .nav-tab {
+            padding: 5px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-tab.active {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -9px; left: 0; right: 0;
+            height: 2px;
+            background: var(--text);
+        }
+
+        /* Site list */
+        .site-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .site-item {
+            width: 100%;
+            background: var(--surface-inset);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+            transition: border-color 0.15s;
+        }
+
+        .site-item:hover { border-color: var(--text-muted); }
+
+        .site-dot { font-size: 12px; color: var(--accent); flex-shrink: 0; }
+
+        .site-body { flex: 1; min-width: 0; }
+
+        .site-name {
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .site-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .site-fav {
+            font-size: 16px;
+            color: var(--accent);
+            background: none;
+            border: none;
+            padding: 2px 4px;
+            flex-shrink: 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            padding: 32px 0;
+        }
+
+        /* =============================================
+           DETAILS PANEL
+        ============================================= */
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            padding: 0;
+        }
+
+        .detail-badges {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 5px;
+            background: var(--surface-inset);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
+        }
+
+        .detail-title {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.25;
+            flex: 1;
+        }
+
+        .fav-btn {
+            font-size: 22px;
+            background: none;
+            border: none;
+            color: var(--accent);
+            padding: 0 0 0 10px;
+            flex-shrink: 0;
+        }
+
+        .detail-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .detail-img {
+            width: 100%;
+            height: 170px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            display: block;
+            margin-bottom: 14px;
+        }
+
+        /* Content tabs */
+        .tabs-nav {
+            display: flex;
+            background: var(--surface-inset);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 2px;
+            gap: 2px;
+            margin-bottom: 12px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 6px 0;
+            border-radius: 5px;
+        }
+
+        .tab-btn.active {
+            background: var(--surface);
+            color: var(--text);
+            font-weight: 700;
+            box-shadow: var(--shadow-sm);
+        }
+
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
-        .content-text { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
-        .content-heading { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 6px; text-transform: uppercase; }
 
-        .map-controls { position: absolute; bottom: 20px; right: 20px; z-index: 20; display: flex; flex-direction: column; gap: 6px; }
-        .ctrl-btn { width: 38px; height: 38px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: var(--shadow); }
+        .content-block { margin-bottom: 12px; }
 
-        /* MARKERS */
+        .content-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text);
+            margin-bottom: 5px;
+        }
+
+        .content-text {
+            font-size: 12px;
+            line-height: 1.65;
+            color: var(--text-muted);
+        }
+
+        /* =============================================
+           MAP CONTROLS
+        ============================================= */
+        .map-controls {
+            position: absolute;
+            bottom: 20px; right: 20px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ctrl-btn {
+            width: 36px; height: 36px;
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            transition: border-color 0.15s;
+        }
+
+        .ctrl-btn:hover { border-color: var(--text-muted); }
+
+        /* =============================================
+           MARKERS
+        ============================================= */
         .custom-marker { background: none; border: none; }
+
         .marker-wrap { position: relative; width: 14px; height: 14px; }
-        .marker-core { width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; position: absolute; top: 2px; left: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+
+        .marker-core {
+            width: 10px; height: 10px;
+            border: 2px solid white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px; left: 2px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Leaflet overrides */
+        .leaflet-popup { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="map"></div>
 
-    <header class="app-header">
+    <!-- HEADER -->
+    <header class="header">
         <div>
             <div class="header-logo">CHRONOS</div>
-            <div class="header-subtitle">Globales Welterbe</div>
+            <div class="header-sub">Globales Welterbe</div>
         </div>
-        <div class="header-right">
-            <div class="xp-display">
-                <div class="xp-value"><span id="rank-badge">Archivar</span> · <span id="xp-points">0</span> XP</div>
-                <div class="xp-bar"><div id="xp-fill" class="xp-fill"></div></div>
-            </div>
+        <div class="header-xp">
+            <div class="xp-label"><span id="xp-rank">Archivar</span> · <span id="xp-points">0</span> XP</div>
+            <div class="xp-bar"><div id="xp-fill" class="xp-fill" style="width:0%"></div></div>
         </div>
     </header>
 
-    <main class="main-container">
-        <section class="story-sidebar">
-            <div id="panel-welcome" class="panel-state active">
-                <div class="welcome-header">
-                    <div class="section-label">Erkunde Welterbe</div>
-                    <h2>Die Stätten der Welt</h2>
-                    <p class="lead-text">Entdecke UNESCO-Welterbestätten direkt aus der Cloud-Datenbank.</p>
-                </div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-                <div class="nav-tabs">
-                    <button class="nav-tab active" data-view="explore">Entdecken</button>
-                    <button class="nav-tab" data-view="favorites">Gespeichert (<span id="fav-count">0</span>)</button>
-                </div>
+        <!-- WELCOME PANEL -->
+        <div id="panel-welcome" class="panel active">
+            <div class="welcome-tag">Erkunde Welterbe</div>
+            <h2 class="welcome-title">Die Stätten der Welt</h2>
+            <p class="welcome-lead">Entdecke UNESCO-Welterbestätten direkt aus der Cloud-Datenbank.</p>
 
-                <div id="view-explore" class="view-panel">
-                    <div id="quick-list-container" class="quick-list"></div>
-                </div>
-
-                <div id="view-favorites" class="view-panel" style="display: none;">
-                    <div id="fav-list-container" class="quick-list">
-                        <div class="empty-fav">Noch keine Favoriten hinzugefügt.</div>
-                    </div>
-                </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-view="explore">Entdecken</button>
+                <button class="nav-tab" data-view="favorites">
+                    Gespeichert (<span id="fav-count">0</span>)
+                </button>
             </div>
 
-            <div id="panel-details" class="panel-state">
-                <button class="back-btn" id="btn-close-details">← Zurück zur Übersicht</button>
-                <div class="site-header">
-                    <div class="site-badges">
-                        <span id="site-country" class="badge">–</span>
-                        <span id="site-category" class="badge">–</span>
-                    </div>
-                    <button id="btn-favorite" style="background:none; border:none; font-size:20px; cursor:pointer;">☆</button>
+            <div id="view-explore" class="site-list"></div>
+            <div id="view-favorites" style="display:none">
+                <div class="site-list" id="fav-list">
+                    <div class="empty-state">Noch keine Favoriten hinzugefügt.</div>
                 </div>
-                <h2 id="site-title" style="margin-bottom:8px;">–</h2>
-                <div id="site-meta" class="site-meta">–</div>
-
-                <div class="gallery-wrapper">
-                    <img id="gallery-img-active" class="gallery-main" src="" alt="Welterbe">
-                </div>
-
-                <div class="tabs-nav">
-                    <button class="tab-trigger active" data-tab="tab-context">Beschreibung</button>
-                    <button class="tab-trigger" data-tab="tab-details">Geodaten</button>
-                </div>
-
-                <div id="tab-context" class="tab-panel active">
-                    <div id="site-context-dynamic" class="content-text"></div>
-                </div>
-                <div id="tab-details" class="tab-panel">
-                    <div id="site-details-dynamic" class="content-text"></div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <div class="map-controls">
-        <button id="btn-toggle-theme" class="ctrl-btn">🌗</button>
-        <button id="btn-zoom-in" class="ctrl-btn">+</button>
-        <button id="btn-zoom-out" class="ctrl-btn">−</button>
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js"></script>
-</body>
-</html>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Geist', sans-serif; background: var(--bg); color: var(--text); }
-
-        #map { position: absolute; inset: 0; z-index: 1; background: var(--bg); }
-
-        .app-header {
-            position: absolute; top: 12px; left: 12px; right: 12px; height: 64px;
-            background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--border);
-            border-radius: 14px; z-index: 20; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: var(--shadow);
-        }
-        .header-logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
-        .header-subtitle { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
-        .xp-display { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-        .xp-value { font-size: 14px; font-weight: 700; color: var(--accent); }
-        .xp-bar { width: 140px; height: 4px; background: var(--surface-dark); border-radius: 2px; overflow: hidden; margin-top: 4px; }
-        .xp-fill { height: 100%; width: 50%; background: var(--accent); transition: width 0.5s; }
-
-        .main-container { position: absolute; top: 88px; left: 12px; bottom: 12px; width: 440px; z-index: 10; pointer-events: none; }
-        .story-sidebar { width: 100%; height: 100%; background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 18px; padding: 24px; overflow-y: auto; pointer-events: auto; box-shadow: var(--shadow-lg); }
-        
-        .panel-state { display: none; }
-        .panel-state.active { display: block; }
-
-        .welcome-header { margin-bottom: 20px; }
-        .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
-        h2 { font-size: 24px; font-weight: 700; line-height: 1.2; margin-bottom: 6px; }
-        .lead-text { font-size: 13px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px; }
-
-        .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-        .chip { padding: 6px 14px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); cursor: pointer; }
-        .chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
-
-        .nav-tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-        .nav-tab { padding: 6px 12px; border: none; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 600; cursor: pointer; }
-        .nav-tab.active { color: var(--text); border-bottom: 2px solid var(--text); border-radius: 0; }
-
-        .quick-list { display: flex; flex-direction: column; gap: 8px; }
-        .quick-item { width: 100%; background: var(--surface-dark); border: 1px solid var(--border); border-radius: 11px; padding: 12px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 12px; }
-        .quick-item-body { flex: 1; min-width: 0; }
-        .quick-item-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .quick-item-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-
-        .back-btn { background: transparent; border: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 16px; }
-        .site-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-        .badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: var(--surface-dark); border: 1px solid var(--border); color: var(--text-secondary); }
-        .site-meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
-        
-        .gallery-wrapper { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; }
-        .gallery-main { width: 100%; height: 180px; object-fit: cover; display: block; }
-
-        .tabs-nav { display: flex; background: var(--surface-dark); border: 1px solid var(--border); padding: 2px; border-radius: 8px; margin-bottom: 14px; }
-        .tab-trigger { flex: 1; background: transparent; border: none; color: var(--text-secondary); font-size: 12px; padding: 6px 0; border-radius: 6px; cursor: pointer; }
-        .tab-trigger.active { background: var(--surface); color: var(--text); font-weight: 600; }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-        .content-text { font-size: 13px; line-height: 1.6; color: var(--text-secondary); }
-        .content-heading { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 6px; text-transform: uppercase; }
-
-        .map-controls { position: absolute; bottom: 20px; right: 20px; z-index: 20; display: flex; flex-direction: column; gap: 6px; }
-        .ctrl-btn { width: 38px; height: 38px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: var(--shadow); }
-
-        /* MARKERS */
-        .custom-marker { background: none; border: none; }
-        .marker-wrap { position: relative; width: 14px; height: 14px; }
-        .marker-core { width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; position: absolute; top: 2px; left: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-    </style>
-</head>
-<body>
-
-    <div id="map"></div>
-
-    <header class="app-header">
-        <div>
-            <div class="header-logo">CHRONOS</div>
-            <div class="header-subtitle">Globales Welterbe</div>
-        </div>
-        <div class="header-right">
-            <div class="xp-display">
-                <div class="xp-value"><span id="rank-badge">Archivar</span> · <span id="xp-points">0</span> XP</div>
-                <div class="xp-bar"><div id="xp-fill" class="xp-fill"></div></div>
             </div>
         </div>
-    </header>
 
-    <main class="main-container">
-        <section class="story-sidebar">
-            <div id="panel-welcome" class="panel-state active">
-                <div class="welcome-header">
-                    <div class="section-label">Erkunde Welterbe</div>
-                    <h2>Die Stätten der Welt</h2>
-                    <p class="lead-text">Entdecke UNESCO-Welterbestätten direkt aus der Cloud-Datenbank.</p>
-                </div>
+        <!-- DETAILS PANEL -->
+        <div id="panel-details" class="panel">
+            <button class="back-btn" id="btn-back">← Zurück zur Übersicht</button>
 
-                <div class="nav-tabs">
-                    <button class="nav-tab active" data-view="explore">Entdecken</button>
-                    <button class="nav-tab" data-view="favorites">Gespeichert (<span id="fav-count">0</span>)</button>
-                </div>
-
-                <div id="view-explore" class="view-panel">
-                    <div id="quick-list-container" class="quick-list"></div>
-                </div>
-
-                <div id="view-favorites" class="view-panel" style="display: none;">
-                    <div id="fav-list-container" class="quick-list">
-                        <div class="empty-fav">Noch keine Favoriten hinzugefügt.</div>
-                    </div>
-                </div>
+            <div class="detail-badges">
+                <span class="badge" id="detail-country">–</span>
+                <span class="badge" id="detail-category">–</span>
             </div>
 
-            <div id="panel-details" class="panel-state">
-                <button class="back-btn" id="btn-close-details">← Zurück zur Übersicht</button>
-                <div class="site-header">
-                    <div class="site-badges">
-                        <span id="site-country" class="badge">–</span>
-                        <span id="site-category" class="badge">–</span>
-                    </div>
-                    <button id="btn-favorite" style="background:none; border:none; font-size:20px; cursor:pointer;">☆</button>
-                </div>
-                <h2 id="site-title" style="margin-bottom:8px;">–</h2>
-                <div id="site-meta" class="site-meta">–</div>
-
-                <div class="gallery-wrapper">
-                    <img id="gallery-img-active" class="gallery-main" src="" alt="Welterbe">
-                </div>
-
-                <div class="tabs-nav">
-                    <button class="tab-trigger active" data-tab="tab-context">Beschreibung</button>
-                    <button class="tab-trigger" data-tab="tab-details">Geodaten</button>
-                </div>
-
-                <div id="tab-context" class="tab-panel active">
-                    <div id="site-context-dynamic" class="content-text"></div>
-                </div>
-                <div id="tab-details" class="tab-panel">
-                    <div id="site-details-dynamic" class="content-text"></div>
-                </div>
+            <div class="detail-header">
+                <h2 class="detail-title" id="detail-title">–</h2>
+                <button class="fav-btn" id="btn-fav">☆</button>
             </div>
-        </section>
-    </main>
+            <div class="detail-meta" id="detail-meta">–</div>
 
+            <img class="detail-img" id="detail-img"
+                 src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=80"
+                 alt="Welterbestätte">
+
+            <div class="tabs-nav">
+                <button class="tab-btn active" data-tab="tab-desc">Beschreibung</button>
+                <button class="tab-btn" data-tab="tab-geo">Geodaten</button>
+            </div>
+
+            <div id="tab-desc" class="tab-panel active">
+                <div id="detail-description" class="content-text">–</div>
+            </div>
+            <div id="tab-geo" class="tab-panel">
+                <div id="detail-geodata" class="content-text">–</div>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- MAP CONTROLS -->
     <div class="map-controls">
-        <button id="btn-toggle-theme" class="ctrl-btn">🌗</button>
-        <button id="btn-zoom-in" class="ctrl-btn">+</button>
-        <button id="btn-zoom-out" class="ctrl-btn">−</button>
+        <button class="ctrl-btn" id="btn-theme" title="Theme wechseln">🌗</button>
+        <button class="ctrl-btn" id="btn-zoom-in" title="Heranzoomen">+</button>
+        <button class="ctrl-btn" id="btn-zoom-out" title="Herauszoomen">−</button>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
+
 </body>
 </html>
