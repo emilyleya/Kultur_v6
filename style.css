@@ -24,19 +24,19 @@
 
 body.dark-theme {
     /* Obsidian Minimalist (Dunkelmodus) */
-    --bg-main:         #1A1510; /* Sehr dunkles Erdbraun als Kartenhintergrund */
-    --surface:         rgba(26, 21, 16, 0.88); 
-    --surface-border:  rgba(239, 229, 219, 0.12);
+    --bg-main:         #14110E; /* Minimal dunkler für noch stärkeren Kontrast */
+    --surface:         rgba(24, 20, 16, 0.92); 
+    --surface-border:  rgba(255, 255, 255, 0.2); /* Klarere, hellere Kantengrenzen */
     
-    /* HOCH KONTRASTIERENDE TEXTE: Ländernamen & Inhalte heben sich perfekt ab */
-    --text-main:       #F5EFEA; /* Klares Elfenbein/Lehmweiß für perfekten Kontrast zur Karte */
-    --text-muted:      #EFE5DB; /* Gut lesbares Hell-Beige für sekundäre Infos */
+    /* MAXIMALER KONTRAST FÜR TEXTE & LÄNDERNAMEN */
+    --text-main:       #FFFFFF; /* Reines, strahlendes Weiß für maximale Lesbarkeit */
+    --text-muted:      #F5EFEA; /* Sehr helles Lehmweiß für sekundäre Texte */
     
-    --card-bg:         rgba(255, 140, 66, 0.05); 
-    --card-border:     rgba(239, 229, 219, 0.08); 
-    --btn-hover:       rgba(255, 140, 66, 0.12);
-    --scrollbar-thumb: rgba(239, 229, 219, 0.2);
-    --accent-light:    rgba(255, 140, 66, 0.15);
+    --card-bg:         rgba(255, 140, 66, 0.08); 
+    --card-border:     rgba(255, 255, 255, 0.15); 
+    --btn-hover:       rgba(255, 140, 66, 0.18);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.3);
+    --accent-light:    rgba(255, 140, 66, 0.2);
 }
 
 *, *::before, *::after { 
