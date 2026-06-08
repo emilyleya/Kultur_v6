@@ -3,8 +3,8 @@
  */
 
 // 1. Supabase Verbindung initialisieren
-const SUPABASE_URL = 'DEINE_SUPABASE_PROJEKT_URL'; 
-const SUPABASE_ANON_KEY = 'DEIN_SUPABASE_ANON_KEY'; 
+const SUPABASE_URL = 'https://mujciribnacdvoomcrjk.supabase.co'; 
+const SUPABASE_ANON_KEY = 'sb_publishable_sJdttu5UqUqDsLEyT52wqA_07I0Fs2J'; 
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
