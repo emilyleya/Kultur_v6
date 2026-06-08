@@ -55,7 +55,14 @@ let activeFilter = "all";
 let activeSort = "default";
 let currentView = "explore";
 
+// 3. Den App-Start anpassen
 document.addEventListener("DOMContentLoaded", () => {
+    // Wir stoßen zuerst das Laden der Datenbank an
+    fetchSitesFromSupabase();
+});
+
+// Diese Funktion startet die Karte erst, WENN die Daten aus der Cloud da sind
+function initApp() {
     const bounds = L.latLngBounds(L.latLng(-85,-180), L.latLng(85,180));
     map = L.map("map", {
         zoomControl: false, attributionControl: false,
@@ -64,9 +71,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     activeTileLayer = L.tileLayer(TILE_LAYERS[currentTheme], { maxZoom: 19, noWrap: true }).addTo(map);
 
+    // Marker auf Basis der frisch geladenen DB-Daten setzen
     HERITAGE_DATA.forEach(site => {
-        const marker = createMarker(site);
-        marker.addTo(map).on("click", () => selectSite(site));
+        L.marker(site.coordinates, { icon: createMarkerIcon(site) })
+         .addTo(map)
+         .on("click", () => selectSite(site));
     });
 
     updateXPUI();
@@ -74,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderFavList();
     setupEvents();
     initTimeSlider();
-});
+}
 
 function createMarker(site) {
     if (site.type === "wonder") {
