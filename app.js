@@ -11,6 +11,28 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Diese Variable bleibt vorerst leer und wird gleich dynamisch befüllt
 let HERITAGE_DATA = [];
 
+// 2. Funktion: Daten asynchron aus Supabase laden
+async function fetchSitesFromSupabase() {
+    try {
+        // ACHTUNG: 'heritage_sites' muss exakt so heißen wie deine Tabelle in Supabase!
+        const { data, error } = await supabase
+            .from('heritage_sites')
+            .select('*');
+
+        if (error) throw error;
+
+        // Wir überschreiben unsere leere Variable mit den echten Cloud-Daten
+        HERITAGE_DATA = data;
+        
+        // Erst wenn die Daten erfolgreich da sind, starten wir die App!
+        initApp();
+        
+    } catch (err) {
+        console.error("Fehler beim Laden der UNESCO-Daten:", err.message);
+        alert("Datenbank-Verbindung fehlgeschlagen. Siehe Konsole.");
+    }
+}
+
 const EPOCH_COLORS = {
     ancient:  "#a32a2a",
     medieval: "#b8860b",
