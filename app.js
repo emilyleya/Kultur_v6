@@ -4,7 +4,7 @@
 
 // ── 1. CONFIG ─────────────────────────────────
 const SUPABASE_URL      = 'https://mujciribnacdvoomcrjk.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11amNpcmlibmFjZHZvb21jcmprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDUzMjgsImV4cCI6MjA5NTg4MTMyOH0.6Ck0OCyzWh78P77iYj4LqGpVGOfVeC649Qf7KtZ5BDs';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11amNpcmlibmFjZHZvb21jcmprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDUzMjgsImV4cCI6MjA5NTg4MTMyOH0.6Ck0OCyz[...]
 
 const TILE_LAYERS = {
     light: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
@@ -256,7 +256,7 @@ async function showDetails(site, coords) {
     // ── Slideshow laden (Panel ist jetzt im DOM sichtbar) ──
     const slideshowEl = document.getElementById('slideshow');
     if (slideshowEl) {
-        slideshowEl.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
+        slideshowEl.innerHTML = '';
         fetchSlideshow(siteName).then(urls => renderSlideshow(urls));
     }
 
