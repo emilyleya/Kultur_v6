@@ -1,18 +1,15 @@
 // =============================================
 //  CHRONOS – app.js
-//  Supabase + Leaflet + Wikipedia + Quiz
 // =============================================
 
 // ── 1. CONFIG ─────────────────────────────────
 const SUPABASE_URL      = 'https://mujciribnacdvoomcrjk.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11amNpcmlibmFjZHZvb21jcmprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDUzMjgsImV4cCI6MjA5NTg4MTMyOH0.6Ck0OCyzWh78P77iYj4LqGpVGOfVeC649Qf7KtZ5BDs'; // eyJ... aus Supabase Settings → API Keys → anon public
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11amNpcmlibmFjZHZvb21jcmprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMDUzMjgsImV4cCI6MjA5NTg4MTMyOH0.6Ck0OCyzWh78P77iYj4LqGpVGOfVeC649Qf7KtZ5BDs';
 
 const TILE_LAYERS = {
     light: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
     dark:  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
 };
-
-const FALLBACK_IMG = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Camponotus_flavomarginatus_ant.jpg/320px-Camponotus_flavomarginatus_ant.jpg';
 
 // ── 2. STATE ──────────────────────────────────
 let map         = null;
@@ -21,7 +18,7 @@ let theme       = 'light';
 let sites       = [];
 let activeSite  = null;
 let currentView = 'explore';
-let userXP      = parseInt(localStorage.getItem('chronos_xp'))   || 0;
+let userXP      = parseInt(localStorage.getItem('chronos_xp'))    || 0;
 let favorites   = JSON.parse(localStorage.getItem('chronos_favs')) || [];
 
 // ── 3. SUPABASE ───────────────────────────────
@@ -57,7 +54,6 @@ function initMap() {
         maxBounds: bounds,
         maxBoundsViscosity: 1.0
     }).setView([20, 10], 3);
-
     tileLayer = L.tileLayer(TILE_LAYERS[theme], { maxZoom: 19, noWrap: true }).addTo(map);
 }
 
@@ -67,83 +63,112 @@ function addMarkers() {
         const lat = parseCoord(site.latitude);
         const lng = parseCoord(site.longitude);
         if (lat === null || lng === null) return;
-
         const icon = L.divIcon({
             className: 'custom-marker',
             html: `<div class="marker-wrap"><div class="marker-core" style="background:#FF8C42"></div></div>`,
-            iconSize: [14, 14],
-            iconAnchor: [7, 7]
+            iconSize: [14, 14], iconAnchor: [7, 7]
         });
-
         L.marker([lat, lng], { icon })
             .addTo(map)
             .on('click', () => showDetails(site, [lat, lng]));
     });
 }
 
-// ── 6. WIKIPEDIA BILDER (Slideshow) ───────────
-
-async function queryWikipediaImages(title) {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images&format=json&imlimit=10&origin=*`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    const page = Object.values(data.query.pages)[0];
-    return page?.images?.map(i => i.title) || [];
-}
-
-async function getImageUrl(fileTitle) {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(fileTitle)}&prop=imageinfo&iiprop=url&iiurlwidth=700&format=json&origin=*`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    const page = Object.values(data.query.pages)[0];
-    return page?.imageinfo?.[0]?.thumburl || null;
-}
-
-async function searchWikipediaTitle(title) {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&srlimit=1&format=json&origin=*`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    return data.query?.search?.[0]?.title || null;
-}
-
+// ── 6. WIKIPEDIA SLIDESHOW ────────────────────
 async function fetchSlideshow(siteName) {
     const isPhoto = t => /\.(jpg|jpeg|png|JPG|JPEG|PNG)$/.test(t) &&
-                         !/(flag|logo|map|svg|coat|arms|icon|locator|location|seal)/i.test(t);
+                         !/(flag|logo|map|coat|arms|icon|locator|location|seal|blank|relief)/i.test(t);
 
-    let title = siteName;
-    let files = (await queryWikipediaImages(title)).filter(isPhoto);
-
-    if (files.length === 0) {
-        title = siteName.split(' ').slice(0, 3).join(' ');
-        files = (await queryWikipediaImages(title)).filter(isPhoto);
+    async function getImages(title) {
+        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images&format=json&imlimit=10&origin=*`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        const page = Object.values(data.query.pages)[0];
+        return (page?.images || []).map(i => i.title).filter(isPhoto);
     }
 
-    if (files.length === 0) {
-        const found = await searchWikipediaTitle(siteName);
-        if (found) files = (await queryWikipediaImages(found)).filter(isPhoto);
+    async function getImageUrl(fileTitle) {
+        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(fileTitle)}&prop=imageinfo&iiprop=url&iiurlwidth=700&format=json&origin=*`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        const page = Object.values(data.query.pages)[0];
+        return page?.imageinfo?.[0]?.thumburl || null;
     }
 
-    if (files.length === 0) return [];
+    async function searchTitle(name) {
+        const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(name)}&srlimit=1&format=json&origin=*`;
+        const res  = await fetch(url);
+        const data = await res.json();
+        return data.query?.search?.[0]?.title || null;
+    }
 
-    const urls = await Promise.all(files.slice(0, 5).map(f => getImageUrl(f)));
-    return urls.filter(Boolean);
+    try {
+        // Stufe 1: exakter Titel
+        let files = await getImages(siteName);
+
+        // Stufe 2: erste 3 Wörter
+        if (files.length === 0) {
+            const short = siteName.split(' ').slice(0, 3).join(' ');
+            files = await getImages(short);
+        }
+
+        // Stufe 3: Volltextsuche
+        if (files.length === 0) {
+            const found = await searchTitle(siteName);
+            if (found) files = await getImages(found);
+        }
+
+        if (files.length === 0) return [];
+
+        const urls = await Promise.all(files.slice(0, 5).map(f => getImageUrl(f)));
+        return urls.filter(Boolean);
+    } catch {
+        return [];
+    }
 }
 
+function renderSlideshow(urls) {
+    const el = document.getElementById('slideshow');
+    if (!el) return;
 
+    if (urls.length === 0) {
+        el.innerHTML = `<div class="slide-loading">Kein Bild verfügbar</div>`;
+        return;
+    }
+
+    let current = 0;
+
+    function render() {
+        el.innerHTML = `
+            <img class="slide-img" src="${urls[current]}" alt="Bild ${current + 1}">
+            ${urls.length > 1 ? `
+                <button class="slide-btn slide-prev" id="slide-prev">&#8249;</button>
+                <button class="slide-btn slide-next" id="slide-next">&#8250;</button>
+                <div class="slide-dots">
+                    ${urls.map((_, i) => `<span class="slide-dot${i === current ? ' active' : ''}"></span>`).join('')}
+                </div>
+            ` : ''}
+        `;
+        if (urls.length > 1) {
+            document.getElementById('slide-prev').onclick = () => { current = (current - 1 + urls.length) % urls.length; render(); };
+            document.getElementById('slide-next').onclick = () => { current = (current + 1) % urls.length; render(); };
+        }
+    }
+
+    render();
+}
 
 // ── 7. QUIZ ───────────────────────────────────
 function buildQuiz(site) {
     const correctYear = parseInt(site.date_inscribed);
     if (!correctYear) return '';
 
-    // 3 falsche Jahreszahlen generieren
     const wrongs = new Set();
     while (wrongs.size < 3) {
         const offset = (Math.floor(Math.random() * 10) + 1) * (Math.random() < 0.5 ? -1 : 1);
         const y = correctYear + offset;
-        if (y !== correctYear && y >= 1978 && y <= 2024) wrongs.add(y);
+        if (y !== correctYear && y >= 1978 && y <= 2025) wrongs.add(y);
     }
-
     const options = [...wrongs, correctYear].sort(() => Math.random() - 0.5);
 
     return `
@@ -151,11 +176,7 @@ function buildQuiz(site) {
             <div class="quiz-label">🎯 Quiz – XP verdienen</div>
             <div class="quiz-question">In welchem Jahr wurde diese Stätte als UNESCO-Welterbe eingeschrieben?</div>
             <div class="quiz-options">
-                ${options.map(y => `
-                    <button class="quiz-opt" data-year="${y}" data-correct="${correctYear}">
-                        ${y}
-                    </button>
-                `).join('')}
+                ${options.map(y => `<button class="quiz-opt" data-year="${y}" data-correct="${correctYear}">${y}</button>`).join('')}
             </div>
             <div class="quiz-result" id="quiz-result" style="display:none"></div>
         </div>
@@ -168,17 +189,13 @@ function bindQuizEvents() {
             const chosen  = parseInt(e.currentTarget.dataset.year);
             const correct = parseInt(e.currentTarget.dataset.correct);
             const isRight = chosen === correct;
-
-            // Alle Buttons deaktivieren
             document.querySelectorAll('.quiz-opt').forEach(b => {
                 b.disabled = true;
                 if (parseInt(b.dataset.year) === correct) b.classList.add('quiz-correct');
                 else if (b === e.currentTarget && !isRight) b.classList.add('quiz-wrong');
             });
-
             const result = document.getElementById('quiz-result');
             result.style.display = 'block';
-
             if (isRight) {
                 earnXP(25);
                 result.innerHTML = '✅ Richtig! +25 XP';
@@ -196,15 +213,15 @@ async function showDetails(site, coords) {
     activeSite = site;
     map.flyTo(coords, 11, { duration: 1.6 });
 
-    const id = getSiteId(site);
+    const id       = getSiteId(site);
+    const siteName = site.site || site.name_en || '';
+
+    // Textfelder befüllen
     document.getElementById('detail-country').textContent  = site.states_name_en || 'Weltweit';
     document.getElementById('detail-category').textContent = site.category || 'UNESCO';
-    document.getElementById('detail-title').textContent    = site.site || site.name_en || 'Unbekannt';
+    document.getElementById('detail-title').textContent    = siteName;
     document.getElementById('detail-meta').textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
     document.getElementById('btn-fav').textContent         = favorites.includes(id) ? '★' : '☆';
-
-    // siteName für Slideshow (wird nach Panel-Wechsel verwendet)
-    const siteName = site.site || site.name_en || '';
 
     // Beschreibung + Quiz
     document.getElementById('detail-description').innerHTML = `
@@ -232,39 +249,17 @@ async function showDetails(site, coords) {
     document.querySelector('[data-tab="tab-desc"]').classList.add('active');
     document.getElementById('tab-desc').classList.add('active');
 
-    // Panel ZUERST wechseln, damit slideshow-Element im DOM ist
+    // ── Panel wechseln (MUSS vor Slideshow sein) ──
     document.getElementById('panel-welcome').classList.remove('active');
     document.getElementById('panel-details').classList.add('active');
 
-    // Slideshow NACH Panel-Wechsel laden
-    const slideshow = document.getElementById('slideshow');
-    slideshow.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
+    // ── Slideshow laden (Panel ist jetzt im DOM sichtbar) ──
+    const slideshowEl = document.getElementById('slideshow');
+    if (slideshowEl) {
+        slideshowEl.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
+        fetchSlideshow(siteName).then(urls => renderSlideshow(urls));
+    }
 
-    fetchSlideshow(siteName).then(urls => {
-        if (urls.length === 0) {
-            slideshow.innerHTML = `<div class="slide-loading">Kein Bild verfügbar</div>`;
-            return;
-        }
-        let current = 0;
-        const render = () => {
-            slideshow.innerHTML = `
-                <img class="slide-img" src="${urls[current]}" alt="Bild ${current + 1}">
-                ${urls.length > 1 ? `
-                <button class="slide-btn slide-prev" id="slide-prev">‹</button>
-                <button class="slide-btn slide-next" id="slide-next">›</button>
-                <div class="slide-dots">
-                    ${urls.map((_, i) => `<span class="slide-dot${i === current ? ' active' : ''}"></span>`).join('')}
-                </div>` : ''}
-            `;
-            if (urls.length > 1) {
-                document.getElementById('slide-prev').addEventListener('click', () => { current = (current - 1 + urls.length) % urls.length; render(); });
-                document.getElementById('slide-next').addEventListener('click', () => { current = (current + 1) % urls.length; render(); });
-            }
-        };
-        render();
-    });
-
-    // XP für Besuch
     earnXP(10);
 }
 
@@ -272,7 +267,6 @@ async function showDetails(site, coords) {
 function renderExploreList() {
     const container = document.getElementById('view-explore');
     container.innerHTML = '';
-
     sites.slice(0, 150).forEach(site => {
         const id    = getSiteId(site);
         const isFav = favorites.includes(id);
@@ -284,7 +278,7 @@ function renderExploreList() {
                 <div class="site-name">${site.site || site.name_en || 'Unbekannte Stätte'}</div>
                 <div class="site-meta">${site.states_name_en || 'Weltweit'} · ${site.date_inscribed || '–'}</div>
             </div>
-            <button class="site-fav" data-id="${id}" title="Favorit">${isFav ? '★' : '☆'}</button>
+            <button class="site-fav" data-id="${id}">${isFav ? '★' : '☆'}</button>
         `;
         btn.addEventListener('click', e => {
             if (e.target.closest('.site-fav')) { toggleFav(id); return; }
@@ -300,12 +294,10 @@ function renderFavList() {
     const container = document.getElementById('fav-list');
     document.getElementById('fav-count').textContent = favorites.length;
     container.innerHTML = '';
-
     if (favorites.length === 0) {
         container.innerHTML = '<div class="empty-state">Noch keine Favoriten hinzugefügt.</div>';
         return;
     }
-
     favorites.forEach(id => {
         const site = sites.find(s => getSiteId(s) === id);
         if (!site) return;
@@ -317,7 +309,7 @@ function renderFavList() {
                 <div class="site-name">${site.site || site.name_en}</div>
                 <div class="site-meta">${site.states_name_en || 'Weltweit'}</div>
             </div>
-            <button class="site-fav" data-id="${id}" title="Entfernen">✕</button>
+            <button class="site-fav" data-id="${id}">✕</button>
         `;
         item.addEventListener('click', e => {
             if (e.target.closest('.site-fav')) { toggleFav(id); return; }
@@ -362,22 +354,18 @@ function bindEvents() {
         document.body.className = theme === 'dark' ? 'dark' : '';
         tileLayer.setUrl(TILE_LAYERS[theme]);
     });
-
     document.getElementById('btn-zoom-in').addEventListener('click',  () => map.zoomIn());
     document.getElementById('btn-zoom-out').addEventListener('click', () => map.zoomOut());
-
     document.getElementById('btn-back').addEventListener('click', () => {
         document.getElementById('panel-details').classList.remove('active');
         document.getElementById('panel-welcome').classList.add('active');
         map.flyTo([20, 10], 3, { duration: 1.5 });
         activeSite = null;
     });
-
     document.getElementById('btn-fav').addEventListener('click', () => {
         if (!activeSite) return;
         toggleFav(getSiteId(activeSite));
     });
-
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('click', e => {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -387,7 +375,6 @@ function bindEvents() {
             document.getElementById('view-favorites').style.display = currentView === 'favorites' ? 'block' : 'none';
         });
     });
-
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', e => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
