@@ -432,6 +432,85 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.3);
         }
 
+        /* =============================================
+           QUIZ
+        ============================================= */
+        .quiz-card {
+            margin-top: 16px;
+            background: var(--surface-inset);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+        }
+
+        .quiz-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .quiz-question {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .quiz-opt {
+            padding: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+
+        .quiz-opt:hover:not(:disabled) { border-color: var(--accent); }
+        .quiz-opt:disabled { cursor: default; }
+
+        .quiz-correct {
+            background: #f0fdf4 !important;
+            border-color: #4ade80 !important;
+            color: #166534 !important;
+        }
+
+        body.dark .quiz-correct {
+            background: rgba(74, 222, 128, 0.15) !important;
+            border-color: #4ade80 !important;
+            color: #4ade80 !important;
+        }
+
+        .quiz-wrong {
+            background: #fef2f2 !important;
+            border-color: #f87171 !important;
+            color: #991b1b !important;
+        }
+
+        body.dark .quiz-wrong {
+            background: rgba(248, 113, 113, 0.15) !important;
+            border-color: #f87171 !important;
+            color: #f87171 !important;
+        }
+
+        .quiz-result {
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
         /* Leaflet overrides */
         .leaflet-popup { display: none !important; }
     </style>
