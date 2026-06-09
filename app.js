@@ -203,34 +203,8 @@ async function showDetails(site, coords) {
     document.getElementById('detail-meta').textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
     document.getElementById('btn-fav').textContent         = favorites.includes(id) ? '★' : '☆';
 
-    // Slideshow: Platzhalter zeigen, dann Wikipedia-Bilder laden
+    // siteName für Slideshow (wird nach Panel-Wechsel verwendet)
     const siteName = site.site || site.name_en || '';
-    const slideshow = document.getElementById('slideshow');
-    slideshow.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
-
-    fetchSlideshow(siteName).then(urls => {
-        if (urls.length === 0) {
-            slideshow.innerHTML = `<div class="slide-loading">Kein Bild verfügbar</div>`;
-            return;
-        }
-        let current = 0;
-        const render = () => {
-            slideshow.innerHTML = `
-                <img class="slide-img" src="${urls[current]}" alt="Bild ${current + 1}">
-                ${urls.length > 1 ? `
-                <button class="slide-btn slide-prev" id="slide-prev">‹</button>
-                <button class="slide-btn slide-next" id="slide-next">›</button>
-                <div class="slide-dots">
-                    ${urls.map((_, i) => `<span class="slide-dot${i === current ? ' active' : ''}"></span>`).join('')}
-                </div>` : ''}
-            `;
-            if (urls.length > 1) {
-                document.getElementById('slide-prev').addEventListener('click', () => { current = (current - 1 + urls.length) % urls.length; render(); });
-                document.getElementById('slide-next').addEventListener('click', () => { current = (current + 1) % urls.length; render(); });
-            }
-        };
-        render();
-    });
 
     // Beschreibung + Quiz
     document.getElementById('detail-description').innerHTML = `
@@ -258,9 +232,37 @@ async function showDetails(site, coords) {
     document.querySelector('[data-tab="tab-desc"]').classList.add('active');
     document.getElementById('tab-desc').classList.add('active');
 
-    // Panel wechseln
+    // Panel ZUERST wechseln, damit slideshow-Element im DOM ist
     document.getElementById('panel-welcome').classList.remove('active');
     document.getElementById('panel-details').classList.add('active');
+
+    // Slideshow NACH Panel-Wechsel laden
+    const slideshow = document.getElementById('slideshow');
+    slideshow.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
+
+    fetchSlideshow(siteName).then(urls => {
+        if (urls.length === 0) {
+            slideshow.innerHTML = `<div class="slide-loading">Kein Bild verfügbar</div>`;
+            return;
+        }
+        let current = 0;
+        const render = () => {
+            slideshow.innerHTML = `
+                <img class="slide-img" src="${urls[current]}" alt="Bild ${current + 1}">
+                ${urls.length > 1 ? `
+                <button class="slide-btn slide-prev" id="slide-prev">‹</button>
+                <button class="slide-btn slide-next" id="slide-next">›</button>
+                <div class="slide-dots">
+                    ${urls.map((_, i) => `<span class="slide-dot${i === current ? ' active' : ''}"></span>`).join('')}
+                </div>` : ''}
+            `;
+            if (urls.length > 1) {
+                document.getElementById('slide-prev').addEventListener('click', () => { current = (current - 1 + urls.length) % urls.length; render(); });
+                document.getElementById('slide-next').addEventListener('click', () => { current = (current + 1) % urls.length; render(); });
+            }
+        };
+        render();
+    });
 
     // XP für Besuch
     earnXP(10);
