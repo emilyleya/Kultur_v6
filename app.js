@@ -82,15 +82,43 @@ function addMarkers() {
 }
 
 // ── 6. WIKIPEDIA BILD ─────────────────────────
+
+// Hilfsfunktion: fragt Wikipedia direkt nach Titel
+async function queryWikipedia(title) {
+    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const page = Object.values(data.query.pages)[0];
+    return page?.thumbnail?.source || null;
+}
+
+// Hilfsfunktion: Volltextsuche → gibt besten Treffer zurück
+async function searchWikipedia(title) {
+    const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&srlimit=1&format=json&origin=*`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const hit  = data.query?.search?.[0];
+    if (!hit) return null;
+    return queryWikipedia(hit.title);
+}
+
 async function fetchWikipediaImage(title) {
     try {
-        const query = encodeURIComponent(title);
-        const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${query}&prop=pageimages&format=json&pithumbsize=600&origin=*`;
-        const res  = await fetch(url);
-        const data = await res.json();
-        const pages = data.query.pages;
-        const page  = Object.values(pages)[0];
-        return page?.thumbnail?.source || null;
+        // Stufe 1: exakter UNESCO-Titel
+        let img = await queryWikipedia(title);
+        if (img) return img;
+
+        // Stufe 2: erste 3 Wörter des Titels
+        const shortTitle = title.split(' ').slice(0, 3).join(' ');
+        if (shortTitle !== title) {
+            img = await queryWikipedia(shortTitle);
+            if (img) return img;
+        }
+
+        // Stufe 3: Wikipedia-Volltextsuche
+        img = await searchWikipedia(title);
+        return img;
+
     } catch {
         return null;
     }
