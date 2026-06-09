@@ -81,48 +81,55 @@ function addMarkers() {
     });
 }
 
-// ── 6. WIKIPEDIA BILD ─────────────────────────
+// ── 6. WIKIPEDIA BILDER (Slideshow) ───────────
 
-// Hilfsfunktion: fragt Wikipedia direkt nach Titel
-async function queryWikipedia(title) {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=pageimages&format=json&pithumbsize=600&origin=*`;
+async function queryWikipediaImages(title) {
+    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=images&format=json&imlimit=10&origin=*`;
     const res  = await fetch(url);
     const data = await res.json();
     const page = Object.values(data.query.pages)[0];
-    return page?.thumbnail?.source || null;
+    return page?.images?.map(i => i.title) || [];
 }
 
-// Hilfsfunktion: Volltextsuche → gibt besten Treffer zurück
-async function searchWikipedia(title) {
+async function getImageUrl(fileTitle) {
+    const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(fileTitle)}&prop=imageinfo&iiprop=url&iiurlwidth=700&format=json&origin=*`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const page = Object.values(data.query.pages)[0];
+    return page?.imageinfo?.[0]?.thumburl || null;
+}
+
+async function searchWikipediaTitle(title) {
     const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&srlimit=1&format=json&origin=*`;
     const res  = await fetch(url);
     const data = await res.json();
-    const hit  = data.query?.search?.[0];
-    if (!hit) return null;
-    return queryWikipedia(hit.title);
+    return data.query?.search?.[0]?.title || null;
 }
 
-async function fetchWikipediaImage(title) {
-    try {
-        // Stufe 1: exakter UNESCO-Titel
-        let img = await queryWikipedia(title);
-        if (img) return img;
+async function fetchSlideshow(siteName) {
+    const isPhoto = t => /\.(jpg|jpeg|png|JPG|JPEG|PNG)$/.test(t) &&
+                         !/(flag|logo|map|svg|coat|arms|icon|locator|location|seal)/i.test(t);
 
-        // Stufe 2: erste 3 Wörter des Titels
-        const shortTitle = title.split(' ').slice(0, 3).join(' ');
-        if (shortTitle !== title) {
-            img = await queryWikipedia(shortTitle);
-            if (img) return img;
-        }
+    let title = siteName;
+    let files = (await queryWikipediaImages(title)).filter(isPhoto);
 
-        // Stufe 3: Wikipedia-Volltextsuche
-        img = await searchWikipedia(title);
-        return img;
-
-    } catch {
-        return null;
+    if (files.length === 0) {
+        title = siteName.split(' ').slice(0, 3).join(' ');
+        files = (await queryWikipediaImages(title)).filter(isPhoto);
     }
+
+    if (files.length === 0) {
+        const found = await searchWikipediaTitle(siteName);
+        if (found) files = (await queryWikipediaImages(found)).filter(isPhoto);
+    }
+
+    if (files.length === 0) return [];
+
+    const urls = await Promise.all(files.slice(0, 5).map(f => getImageUrl(f)));
+    return urls.filter(Boolean);
 }
+
+
 
 // ── 7. QUIZ ───────────────────────────────────
 function buildQuiz(site) {
@@ -196,15 +203,33 @@ async function showDetails(site, coords) {
     document.getElementById('detail-meta').textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
     document.getElementById('btn-fav').textContent         = favorites.includes(id) ? '★' : '☆';
 
-    // Bild: Platzhalter zeigen, dann Wikipedia laden
-    const img = document.getElementById('detail-img');
-    img.style.opacity = '0.4';
-    img.src = FALLBACK_IMG;
-
+    // Slideshow: Platzhalter zeigen, dann Wikipedia-Bilder laden
     const siteName = site.site || site.name_en || '';
-    fetchWikipediaImage(siteName).then(url => {
-        img.src = url || FALLBACK_IMG;
-        img.style.opacity = '1';
+    const slideshow = document.getElementById('slideshow');
+    slideshow.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
+
+    fetchSlideshow(siteName).then(urls => {
+        if (urls.length === 0) {
+            slideshow.innerHTML = `<div class="slide-loading">Kein Bild verfügbar</div>`;
+            return;
+        }
+        let current = 0;
+        const render = () => {
+            slideshow.innerHTML = `
+                <img class="slide-img" src="${urls[current]}" alt="Bild ${current + 1}">
+                ${urls.length > 1 ? `
+                <button class="slide-btn slide-prev" id="slide-prev">‹</button>
+                <button class="slide-btn slide-next" id="slide-next">›</button>
+                <div class="slide-dots">
+                    ${urls.map((_, i) => `<span class="slide-dot${i === current ? ' active' : ''}"></span>`).join('')}
+                </div>` : ''}
+            `;
+            if (urls.length > 1) {
+                document.getElementById('slide-prev').addEventListener('click', () => { current = (current - 1 + urls.length) % urls.length; render(); });
+                document.getElementById('slide-next').addEventListener('click', () => { current = (current + 1) % urls.length; render(); });
+            }
+        };
+        render();
     });
 
     // Beschreibung + Quiz
