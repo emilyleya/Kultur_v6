@@ -136,13 +136,13 @@
         .sidebar {
             position: absolute;
             top: 84px; left: 12px; bottom: 12px;
-            width: 420px;
+            width: 580px;
             z-index: 10;
             background: var(--surface);
             backdrop-filter: blur(16px);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 20px;
+            padding: 24px;
             overflow-y: auto;
             box-shadow: var(--shadow-lg);
             scrollbar-width: thin;
@@ -330,7 +330,7 @@
 
         .detail-img {
             width: 100%;
-            height: 170px;
+            height: 320px;
             object-fit: cover;
             border-radius: var(--radius-sm);
             border: 1px solid var(--border);
@@ -510,6 +510,80 @@
             font-size: 12px;
             font-weight: 600;
         }
+
+
+        /* =============================================
+           SLIDESHOW
+        ============================================= */
+        .slideshow {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--surface-inset);
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .slide-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .slide-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .slide-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.45);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+            z-index: 2;
+        }
+
+        .slide-btn:hover { background: rgba(0,0,0,0.7); }
+        .slide-prev { left: 10px; }
+        .slide-next { right: 10px; }
+
+        .slide-dots {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 2;
+        }
+
+        .slide-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .slide-dot.active { background: white; }
 
         /* Leaflet overrides */
         .leaflet-popup { display: none !important; }
