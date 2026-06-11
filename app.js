@@ -335,3 +335,294 @@ function bindQuizEvents() {
 // ── 8. DETAILS ────────────────────────────────
 async function showDetails(site, coords) {
     activeSite = site;
+    
+    // Sidebar wieder reinschieben, falls sie geschlossen war
+    document.querySelector('.sidebar').classList.remove('collapsed');
+    
+    map.flyTo(coords, 11, { duration: 1.6 });
+
+    const id       = getSiteId(site);
+    const siteName = site.site || site.name_en || '';
+
+    document.getElementById('detail-country').textContent  = site.states_name_en || 'Weltweit';
+    document.getElementById('detail-category').textContent = site.category || 'UNESCO';
+    document.getElementById('detail-title').textContent    = siteName;
+    document.getElementById('detail-meta').textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
+    document.getElementById('btn-fav').textContent         = favorites.includes(id) ? '★' : '☆';
+
+    const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
+    
+    // TAB 1: NUR die reinen Texte (UNESCO, Wikipedia) & das Quiz – KEINE Geodaten mehr hier!
+    document.getElementById('detail-description').innerHTML = `
+        <div class="content-block">
+            <div class="content-label">UNESCO Beschreibung</div>
+            <p class="content-text">${dbDescription}</p>
+        </div>
+        <div class="content-block" id="wiki-extended-block" style="display:none">
+            <div class="content-label">Erweiterte Informationen (Wikipedia)</div>
+            <p class="content-text" id="wiki-extended-text">Lade zusätzliche Details...</p>
+        </div>
+        <div id="quiz-placeholder"></div>
+    `;
+
+    // TAB 2: Hier kommen die Geodaten exklusiv und sauber isoliert rein
+    const geoEl = document.getElementById('detail-geodata');
+    if (geoEl) {
+        geoEl.innerHTML = `
+            <div class="content-block">
+                <div class="content-label">Geografische Daten</div>
+                <p class="content-text"><strong>Fläche:</strong> ${site.area_hectares || '–'} Hektar</p>
+                <p class="content-text"><strong>Region:</strong> ${site.region_en || '–'}</p>
+            </div>
+        `;
+    }
+
+    document.getElementById('panel-welcome').classList.remove('active');
+    document.getElementById('panel-details').classList.add('active');
+
+    const slideshowEl = document.getElementById('slideshow');
+    if (slideshowEl) {
+        slideshowEl.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
+        fetchSlideshow(siteName).then(urls => renderSlideshow(urls));
+    }
+
+    fetchWikipediaSummary(siteName).then(wikiText => {
+        const wikiBlock = document.getElementById('wiki-extended-block');
+        const wikiPara = document.getElementById('wiki-extended-text');
+        if (wikiText && wikiText.trim().length > 10) {
+            wikiPara.textContent = wikiText;
+            wikiBlock.style.display = 'block';
+            injectAdvancedQuiz(site, wikiText);
+        } else {
+            injectAdvancedQuiz(site, "");
+        }
+    });
+
+    earnXP(10);
+}
+
+// ── 9. LISTS ──────────────────────────────────
+function renderExploreList() {
+    const container = document.getElementById('view-explore');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    const displayList = getFilteredSites();
+    displayList.slice(0, 150).forEach(site => {
+        const id    = getSiteId(site);
+        const isFav = favorites.includes(id);
+        
+        // Ermittle die Epoche für die dynamische Farbe des Listen-Dots
+        const era = getSiteEra(site);
+        let dotColor = '#FF8C42'; // Fallback
+        if (era === 'ancient')  dotColor = '#6a241c';
+        if (era === 'medieval') dotColor = '#cf6229';
+        if (era === 'modern')   dotColor = '#fbbf69';
+
+        const btn   = document.createElement('button');
+        btn.className = 'site-item';
+        btn.innerHTML = `
+            <span class="site-dot" style="color: ${dotColor}">●</span>
+            <div class="site-body">
+                <div class="site-name">${site.site || site.name_en || 'Unbekannte Stätte'}</div>
+                <div class="site-meta">${site.states_name_en || 'Weltweit'} · ${site.date_inscribed || '–'}</div>
+            </div>
+            <button class="site-fav" data-id="${id}">${isFav ? '★' : '☆'}</button>
+        `;
+        btn.addEventListener('click', e => {
+            if (e.target.closest('.site-fav')) { toggleFav(id); return; }
+            const lat = parseCoord(site.latitude);
+            const lng = parseCoord(site.longitude);
+            if (lat !== null && lng !== null) showDetails(site, [lat, lng]);
+        });
+        container.appendChild(btn);
+    });
+}
+
+function renderFavList() {
+    const container = document.getElementById('fav-list');
+    if (!container) return;
+    document.getElementById('fav-count').textContent = favorites.length;
+    container.innerHTML = '';
+    if (favorites.length === 0) {
+        container.innerHTML = '<div class="empty-state">Noch keine Favoriten hinzugefügt.</div>';
+        return;
+    }
+    favorites.forEach(id => {
+        const site = sites.find(s => getSiteId(s) === id);
+        if (!site) return;
+
+        const era = getSiteEra(site);
+        let dotColor = '#FF8C42';
+        if (era === 'ancient')  dotColor = '#6a241c';
+        if (era === 'medieval') dotColor = '#cf6229';
+        if (era === 'modern')   dotColor = '#fbbf69';
+
+        const item = document.createElement('button');
+        item.className = 'site-item';
+        item.innerHTML = `
+            <span class="site-dot" style="color: ${dotColor}">●</span>
+            <div class="site-body">
+                <div class="site-name">${site.site || site.name_en}</div>
+                <div class="site-meta">${site.states_name_en || 'Weltweit'}</div>
+            </div>
+            <button class="site-fav" data-id="${id}">✕</button>
+        `;
+        item.addEventListener('click', e => {
+            if (e.target.closest('.site-fav')) { toggleFav(id); return; }
+            const lat = parseCoord(site.latitude);
+            const lng = parseCoord(site.longitude);
+            if (lat !== null && lng !== null) showDetails(site, [lat, lng]);
+        });
+        container.appendChild(item);
+    });
+}
+
+// ── 10. FAVORITES ─────────────────────────────
+function toggleFav(id) {
+    const idx = favorites.indexOf(id);
+    if (idx === -1) favorites.push(id);
+    else favorites.splice(idx, 1);
+    localStorage.setItem('chronos_favs', JSON.stringify(favorites));
+    renderExploreList();
+    renderFavList();
+    if (activeSite && getSiteId(activeSite) === id) {
+        document.getElementById('btn-fav').textContent = favorites.includes(id) ? '★' : '☆';
+    }
+}
+
+// ── 11. XP ────────────────────────────────────
+function earnXP(amount) {
+    userXP += amount;
+    localStorage.setItem('chronos_xp', userXP);
+    updateXP();
+}
+
+// ── 12. EVENTS ────────────────────────────────
+function updateXP() {
+    const xpPointsEl = document.getElementById('xp-points');
+    const xpFillEl = document.getElementById('xp-fill');
+    if (xpPointsEl) xpPointsEl.textContent = userXP;
+    if (xpFillEl) {
+        const pct = Math.min((userXP % 500) / 500 * 100, 100);
+        xpFillEl.style.width = pct + '%';
+    }
+}
+
+function bindEvents() {
+    document.getElementById('btn-theme').addEventListener('click', () => {
+        theme = theme === 'light' ? 'dark' : 'light';
+        document.body.className = theme === 'dark' ? 'dark' : '';
+        tileLayer.setUrl(TILE_LAYERS[theme]);
+    });
+    document.getElementById('btn-zoom-in').addEventListener('click',  () => map.zoomIn());
+    document.getElementById('btn-zoom-out').addEventListener('click', () => map.zoomOut());
+    document.getElementById('btn-back').addEventListener('click', () => {
+        document.getElementById('panel-details').classList.remove('active');
+        document.getElementById('panel-welcome').classList.add('active');
+        map.flyTo([20, 10], 3, { duration: 1.5 });
+        activeSite = null;
+    });
+    document.getElementById('btn-fav').addEventListener('click', () => {
+        if (!activeSite) return;
+        toggleFav(getSiteId(activeSite));
+    });
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', e => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            currentView = e.currentTarget.dataset.view;
+            document.getElementById('view-explore').style.display   = currentView === 'explore'   ? 'flex' : 'none';
+            document.getElementById('view-favorites').style.display = currentView === 'favorites' ? 'block' : 'none';
+        });
+    });
+
+    // Kombinierter Filter Event-Listener
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            const type = e.currentTarget.dataset.filterType;
+            const val  = e.currentTarget.dataset.filterVal;
+            
+            if (type === 'all') {
+                activeFilters.type = 'all';
+                activeFilters.era = 'all';
+                activeFilters.region = 'all';
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('[data-filter-val="all"]').classList.add('active');
+            } else {
+                document.querySelector('[data-filter-val="all"]').classList.remove('active');
+                
+                if (e.currentTarget.classList.contains('active')) {
+                    e.currentTarget.classList.remove('active');
+                    activeFilters[type] = 'all';
+                    
+                    const anyActive = Object.values(activeFilters).some(v => v !== 'all');
+                    if (!anyActive) document.querySelector('[data-filter-val="all"]').classList.add('active');
+                } else {
+                    document.querySelectorAll(`.filter-btn[data-filter-type="${type}"]`).forEach(b => b.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    activeFilters[type] = val;
+                }
+            }
+            applyFiltering();
+        });
+    });
+
+    // Event-Listener zum Umschalten der Detail-Tabs (Beschreibung / Geodaten)
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Event-Listener zum Ein- und Ausklappen der Seitenleiste
+    const sidebar = document.querySelector('.sidebar');
+    const toggleBtn = document.getElementById('btn-toggle-sidebar');
+    
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            // Leaflet mitteilen, dass sich der Container geändert hat
+            setTimeout(() => { map.invalidateSize(); }, 400);
+        });
+    }
+}
+
+// ── 13. HELPERS ───────────────────────────────
+function parseCoord(val) {
+    if (val === undefined || val === null) return null;
+    const num = parseFloat(String(val).replace(',', '.'));
+    return isNaN(num) ? null : num;
+}
+
+function getSiteId(site) {
+    return site.id_no ?? site.unique_number ?? null;
+}
+
+function getSiteEra(site) {
+    const text = ((site.short_description_en || "") + " " + (site.site || "")).toLowerCase();
+    if (text.includes("ancient") || text.includes("bc") || text.includes("roman empire") || text.includes("greek")) {
+        return "ancient";
+    }
+    if (text.includes("medieval") || text.includes("monastery") || text.includes("century castle") || text.includes("dynasty")) {
+        return "medieval";
+    }
+    return "modern";
+}
+
+function isWorldWonder(site) {
+    const name = (site.site || site.name_en || "").toLowerCase();
+    return name.includes("great wall") ||          
+           name.includes("petra") ||               
+           name.includes("rio de janeiro") ||      
+           name.includes("machu picchu") ||        
+           name.includes("chichen") ||             
+           name.includes("colosseum") ||           
+           name.includes("taj mahal");             
+}
+
+// ── START ─────────────────────────────────────
+loadSites();
