@@ -101,17 +101,23 @@ function addMarkers() {
 
 function getFilteredSites() {
     return sites.filter(site => {
-        if (currentFilterType === 'all') return true;
-        if (currentFilterType === 'type') {
-            if (currentFilterVal === 'wonder') return isWorldWonder(site);
-            if (currentFilterVal === 'heritage') return !isWorldWonder(site);
+        // 1. Check nach Typ (Weltwunder / Kulturstätten)
+        if (activeFilters.type !== 'all') {
+            if (activeFilters.type === 'wonder' && !isWorldWonder(site)) return false;
+            if (activeFilters.type === 'heritage' && isWorldWonder(site)) return false;
         }
-        if (currentFilterType === 'era') {
-            return getSiteEra(site) === currentFilterVal;
+        
+        // 2. Check nach Epoche (Antike / Mittelalter / Neuzeit)
+        if (activeFilters.era !== 'all') {
+            if (getSiteEra(site) !== activeFilters.era) return false;
         }
-        if (currentFilterType === 'region') {
-            return site.region_en === currentFilterVal;
+        
+        // 3. Check nach Region / Kontinent
+        if (activeFilters.region !== 'all') {
+            if (site.region_en !== activeFilters.region) return false;
         }
+        
+        // Wenn alle aktivierten Filter passen, nimm die Stätte auf
         return true;
     });
 }
