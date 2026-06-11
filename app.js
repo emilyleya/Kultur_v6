@@ -20,6 +20,9 @@ let activeSite  = null;
 let currentView = 'explore';
 let userXP      = parseInt(localStorage.getItem('chronos_xp'))    || 0;
 let favorites   = JSON.parse(localStorage.getItem('chronos_favs')) || [];
+let currentFilterType = 'all';
+let currentFilterVal  = 'all';
+let mapMarkers        = [];
 
 // ── 3. SUPABASE ───────────────────────────────
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
