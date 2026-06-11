@@ -543,6 +543,21 @@ function bindEvents() {
             document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
         });
     });
+// Filter-Chips Event Listener
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', e => {
+            // Aktiven Zustand bei den Knöpfen wechseln
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            
+            // Filterwerte auslesen
+            currentFilterType = e.currentTarget.dataset.filterType;
+            currentFilterVal  = e.currentTarget.dataset.filterVal;
+            
+            // Filterung ausführen
+            applyFiltering();
+        });
+    });
 }
 
 // ── 13. HELPERS ───────────────────────────────
