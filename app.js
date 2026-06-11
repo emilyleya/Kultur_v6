@@ -406,10 +406,18 @@ function renderExploreList() {
     displayList.slice(0, 150).forEach(site => {
         const id    = getSiteId(site);
         const isFav = favorites.includes(id);
+        
+        // NEU: Ermittle die Epoche für die dynamische Farbe des Listen-Dots
+        const era = getSiteEra(site);
+        let dotColor = '#FF8C42'; // Fallback
+        if (era === 'ancient')  dotColor = '#6a241c';
+        if (era === 'medieval') dotColor = '#cf6229';
+        if (era === 'modern')   dotColor = '#fbbf69';
+
         const btn   = document.createElement('button');
         btn.className = 'site-item';
         btn.innerHTML = `
-            <span class="site-dot">●</span>
+            <span class="site-dot" style="color: ${dotColor}">●</span>
             <div class="site-body">
                 <div class="site-name">${site.site || site.name_en || 'Unbekannte Stätte'}</div>
                 <div class="site-meta">${site.states_name_en || 'Weltweit'} · ${site.date_inscribed || '–'}</div>
