@@ -617,49 +617,64 @@ body.dark .quiz-wrong {
 }
 
 .wonder-star-glyph {
-    font-size: 13px; /* Kleinerer, feinerer Stern */
-    color: #401B02;    /* Dein gewünschtes Dunkelbraun */
-    text-shadow: 0 1px 2px rgba(255,255,255,0.6); /* Heller Schatten, damit das Braun auf dunkler Map lesbar ist */
+    font-size: 13px;
+    color: #401B02;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.6);
     z-index: 2;
     animation: wonderPulse 3s infinite ease-in-out;
 }
 
 @keyframes wonderPulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.1); } /* Minimale Bewegung, damit es edel bleibt */
+    50% { transform: scale(1.1); }
     100% { transform: scale(1); }
-
-/* Klasse zum Herausrutschen der Seitenleiste */
-.sidebar.collapsed {
-    transform: translateX(-595px); /* Rutscht komplett nach links raus (Breite + Abstand) */
 }
 
-/* Der kleine Einklapp-Button an der Seite */
+/* ── INTERACTIVE SIDEBAR COLLAPSE ── */
+.sidebar.collapsed {
+    transform: translateX(-605px); /* Schiebt die Leiste geschmeidig aus dem Fokus */
+}
+
+/* Der schlichte, längliche Tabletten-Button rechts an der Sidebar angedockt */
 .toggle-sidebar-btn {
     position: absolute;
-    top: 24px;
-    right: -16px; /* Steht leicht über den Rand heraus, damit man ihn immer klicken kann */
-    width: 32px;
-    height: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 574px; /* Exakt bündig mit der Sidebar */
+    width: 24px;
+    height: 48px;
     background: var(--surface);
     backdrop-filter: blur(16px);
     border: 1px solid var(--border);
-    border-radius: 50%;
-    color: var(--text);
-    font-size: 14px;
+    border-left: none; /* Verschmilzt mit dem Rand */
+    border-radius: 0 8px 8px 0;
+    color: var(--text-muted);
+    font-size: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-sm);
-    z-index: 30;
-    transition: transform 0.3s ease, border-color 0.15s;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+    z-index: 15;
+    transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1), background 0.2s, color 0.2s;
+    cursor: pointer;
 }
+
 .toggle-sidebar-btn:hover {
-    border-color: var(--text-muted);
+    color: var(--text);
+    background: var(--surface-inset);
 }
-/* Wenn eingeklappt, dreht sich der Pfeil um */
-.sidebar.collapsed .toggle-sidebar-btn {
+
+/* Wandert automatisch mit nach links, wenn die Sidebar kollabiert */
+.sidebar.collapsed + .toggle-sidebar-btn {
+    left: -1px;
+}
+
+/* Rotiert den Pfeil um 180 Grad */
+.sidebar.collapsed + .toggle-sidebar-btn span {
     transform: rotate(180deg);
-    right: -45px; /* Wandert etwas weiter raus, wenn die Leiste weg ist */
 }
+
+.toggle-sidebar-btn span {
+    display: inline-block;
+    transition: transform 0.3s ease;
 }
