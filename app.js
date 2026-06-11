@@ -578,13 +578,65 @@ function bindEvents() {
         });
     });
 
-    // Event-Listener zum Umschalten der Detail-Tabs (Beschreibung / Geodaten)
+  // Steuerung für das saubere Umschalten und Leeren der Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', e => {
+            if (!activeSite) return;
+            
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             e.currentTarget.classList.add('active');
-            document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
+            
+            const targetTab = e.currentTarget.dataset.tab;
+            const descEl = document.getElementById('detail-description');
+            const geoEl = document.getElementById('detail-geodata');
+            
+            if (targetTab === 'tab-desc') {
+                // Wenn wir auf Beschreibung klicken -> Geodaten löschen!
+                if (geoEl) geoEl.innerHTML = '';
+                
+                const dbDescription = activeSite.short_description_en || 'Keine Beschreibung vorhanden.';
+                if (descEl) {
+                    descEl.innerHTML = `
+                        <div class="content-block">
+                            <div class="content-label">UNESCO Beschreibung</div>
+                            <p class="content-text">${dbDescription}</p>
+                        </div>
+                        <div class="content-block" id="wiki-extended-block" style="display:none">
+                            <div class="content-label">Erweiterte Informationen (Wikipedia)</div>
+                            <p class="content-text" id="wiki-extended-text">Lade zusätzliche Details...</p>
+                        </div>
+                        <div id="quiz-placeholder"></div>
+                    `;
+                }
+                
+                // Wikipedia & Quiz im Beschreibungstab re-initialisieren
+                const siteName = activeSite.site || activeSite.name_en || '';
+                fetchWikipediaSummary(siteName).then(wikiText => {
+                    const wikiBlock = document.getElementById('wiki-extended-block');
+                    const wikiPara = document.getElementById('wiki-extended-text');
+                    if (wikiText && wikiText.trim().length > 10) {
+                        if (wikiPara) wikiPara.textContent = wikiText;
+                        if (wikiBlock) wikiBlock.style.display = 'block';
+                        injectAdvancedQuiz(activeSite, wikiText);
+                    } else {
+                        injectAdvancedQuiz(activeSite, "");
+                    }
+                });
+                
+            } else if (targetTab === 'tab-geo') {
+                // Wenn wir auf Geodaten klicken -> Beschreibung und Quiz radikal löschen!
+                if (descEl) descEl.innerHTML = '';
+                
+                if (geoEl) {
+                    geoEl.innerHTML = `
+                        <div class="content-block">
+                            <div class="content-label">Geografische Daten</div>
+                            <p class="content-text"><strong>Fläche:</strong> ${activeSite.area_hectares || '–'} Hektar</p>
+                            <p class="content-text"><strong>Region:</strong> ${activeSite.region_en || '–'}</p>
+                        </div>
+                    `;
+                }
+            }
         });
     });
 
