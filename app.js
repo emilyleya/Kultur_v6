@@ -20,8 +20,12 @@ let activeSite        = null;
 let currentView       = 'explore';
 let userXP            = parseInt(localStorage.getItem('chronos_xp'))    || 0;
 let favorites         = JSON.parse(localStorage.getItem('chronos_favs')) || [];
-let currentFilterType = 'all';
-let currentFilterVal  = 'all';
+// Ersetze die alten beiden Filter-Variablen durch dieses Objekt:
+let activeFilters = {
+    type: 'all',
+    era: 'all',
+    region: 'all'
+};
 let mapMarkers        = [];
 
 // ── 3. SUPABASE ───────────────────────────────
