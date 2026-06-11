@@ -5,595 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHRONOS – Globales Welterbe</title>
 
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        /* =============================================
-           DESIGN TOKENS
-        ============================================= */
-        :root {
-            --bg:             #FBF8F3;
-            --surface:        rgba(251, 248, 243, 0.96);
-            --surface-inset:  #F5EFEA;
-            --border:         rgba(139, 123, 111, 0.18);
-            --text:           #3E3530;
-            --text-muted:     #8B7B6F;
-            --accent:         #FF8C42;
-            --shadow-sm:      0 2px 8px rgba(0,0,0,0.04);
-            --shadow-md:      0 8px 24px rgba(0,0,0,0.07);
-            --shadow-lg:      0 16px 48px rgba(0,0,0,0.10);
-            --radius-sm:      8px;
-            --radius-md:      12px;
-            --radius-lg:      18px;
-        }
-
-        body.dark {
-            --bg:             #141210;
-            --surface:        rgba(22, 18, 14, 0.96);
-            --surface-inset:  rgba(255, 140, 66, 0.06);
-            --border:         rgba(255, 255, 255, 0.10);
-            --text:           #F5F0EB;
-            --text-muted:     #A89D94;
-            --shadow-sm:      0 2px 8px rgba(0,0,0,0.3);
-            --shadow-md:      0 8px 24px rgba(0,0,0,0.4);
-            --shadow-lg:      0 16px 48px rgba(0,0,0,0.6);
-        }
-
-        /* =============================================
-           RESET & BASE
-        ============================================= */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        html, body {
-            width: 100%; height: 100%; overflow: hidden;
-            font-family: 'Geist', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            transition: background 0.3s, color 0.3s;
-        }
-
-        button { font-family: inherit; cursor: pointer; }
-
-        /* =============================================
-           MAP
-        ============================================= */
-        #map {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            background: var(--bg);
-        }
-
-        /* =============================================
-           HEADER
-        ============================================= */
-        .header {
-            position: absolute;
-            top: 12px; left: 12px; right: 12px;
-            height: 60px;
-            z-index: 20;
-            background: var(--surface);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .header-logo {
-            font-size: 17px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-            color: var(--text);
-        }
-
-        .header-sub {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .header-xp {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 5px;
-        }
-
-        .xp-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--accent);
-        }
-
-        .xp-bar {
-            width: 120px;
-            height: 3px;
-            background: var(--surface-inset);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .xp-fill {
-            height: 100%;
-            background: var(--accent);
-            transition: width 0.5s ease;
-        }
-
-        /* =============================================
-           SIDEBAR
-        ============================================= */
-        .sidebar {
-            position: absolute;
-            top: 84px; left: 12px; bottom: 12px;
-            width: 580px;
-            z-index: 10;
-            background: var(--surface);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-
-        /* =============================================
-           PANELS (welcome / details)
-        ============================================= */
-        .panel { display: none; }
-        .panel.active { display: block; }
-
-        /* =============================================
-           WELCOME PANEL
-        ============================================= */
-        .welcome-tag {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--accent);
-            margin-bottom: 4px;
-        }
-
-        .welcome-title {
-            font-size: 22px;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 6px;
-        }
-
-        .welcome-lead {
-            font-size: 12px;
-            line-height: 1.6;
-            color: var(--text-muted);
-            margin-bottom: 18px;
-        }
-
-        /* Nav tabs */
-        .nav-tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 14px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 8px;
-        }
-
-        .nav-tab {
-            padding: 5px 12px;
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 12px;
-            font-weight: 500;
-            position: relative;
-        }
-
-        .nav-tab.active {
-            color: var(--text);
-            font-weight: 700;
-        }
-
-        .nav-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -9px; left: 0; right: 0;
-            height: 2px;
-            background: var(--text);
-        }
-
-        /* Site list */
-        .site-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .site-item {
-            width: 100%;
-            background: var(--surface-inset);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-align: left;
-            transition: border-color 0.15s;
-        }
-
-        .site-item:hover { border-color: var(--text-muted); }
-
-        .site-dot { font-size: 12px; color: var(--accent); flex-shrink: 0; }
-
-        .site-body { flex: 1; min-width: 0; }
-
-        .site-name {
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .site-meta {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .site-fav {
-            font-size: 16px;
-            color: var(--accent);
-            background: none;
-            border: none;
-            padding: 2px 4px;
-            flex-shrink: 0;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 12px;
-            padding: 32px 0;
-        }
-
-        /* =============================================
-           DETAILS PANEL
-        ============================================= */
-        .back-btn {
-            background: none;
-            border: none;
-            color: var(--accent);
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 14px;
-            padding: 0;
-        }
-
-        .detail-badges {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            font-size: 10px;
-            font-weight: 600;
-            padding: 3px 9px;
-            border-radius: 5px;
-            background: var(--surface-inset);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-        }
-
-        .detail-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 4px;
-        }
-
-        .detail-title {
-            font-size: 20px;
-            font-weight: 700;
-            line-height: 1.25;
-            flex: 1;
-        }
-
-        .fav-btn {
-            font-size: 22px;
-            background: none;
-            border: none;
-            color: var(--accent);
-            padding: 0 0 0 10px;
-            flex-shrink: 0;
-        }
-
-        .detail-meta {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 14px;
-        }
-
-        .detail-img {
-            width: 100%;
-            height: 320px;
-            object-fit: cover;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            display: block;
-            margin-bottom: 14px;
-        }
-
-        /* Content tabs */
-        .tabs-nav {
-            display: flex;
-            background: var(--surface-inset);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 2px;
-            gap: 2px;
-            margin-bottom: 12px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 11px;
-            font-weight: 500;
-            padding: 6px 0;
-            border-radius: 5px;
-        }
-
-        .tab-btn.active {
-            background: var(--surface);
-            color: var(--text);
-            font-weight: 700;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-
-        .content-block { margin-bottom: 12px; }
-
-        .content-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--text);
-            margin-bottom: 5px;
-        }
-
-        .content-text {
-            font-size: 12px;
-            line-height: 1.65;
-            color: var(--text-muted);
-        }
-
-        /* =============================================
-           MAP CONTROLS
-        ============================================= */
-        .map-controls {
-            position: absolute;
-            bottom: 20px; right: 20px;
-            z-index: 20;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .ctrl-btn {
-            width: 36px; height: 36px;
-            background: var(--surface);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text);
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow-sm);
-            transition: border-color 0.15s;
-        }
-
-        .ctrl-btn:hover { border-color: var(--text-muted); }
-
-        /* =============================================
-           MARKERS
-        ============================================= */
-        .custom-marker { background: none; border: none; }
-
-        .marker-wrap { position: relative; width: 14px; height: 14px; }
-
-        .marker-core {
-            width: 10px; height: 10px;
-            border: 2px solid white;
-            border-radius: 50%;
-            position: absolute;
-            top: 2px; left: 2px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-        }
-
-        /* =============================================
-           QUIZ
-        ============================================= */
-        .quiz-card {
-            margin-top: 16px;
-            background: var(--surface-inset);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 14px;
-        }
-
-        .quiz-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--accent);
-            margin-bottom: 8px;
-        }
-
-        .quiz-question {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-
-        .quiz-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .quiz-opt {
-            padding: 8px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text);
-            cursor: pointer;
-            transition: border-color 0.15s;
-        }
-
-        .quiz-opt:hover:not(:disabled) { border-color: var(--accent); }
-        .quiz-opt:disabled { cursor: default; }
-
-        .quiz-correct {
-            background: #f0fdf4 !important;
-            border-color: #4ade80 !important;
-            color: #166534 !important;
-        }
-
-        body.dark .quiz-correct {
-            background: rgba(74, 222, 128, 0.15) !important;
-            border-color: #4ade80 !important;
-            color: #4ade80 !important;
-        }
-
-        .quiz-wrong {
-            background: #fef2f2 !important;
-            border-color: #f87171 !important;
-            color: #991b1b !important;
-        }
-
-        body.dark .quiz-wrong {
-            background: rgba(248, 113, 113, 0.15) !important;
-            border-color: #f87171 !important;
-            color: #f87171 !important;
-        }
-
-        .quiz-result {
-            margin-top: 10px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-
-        /* =============================================
-           SLIDESHOW
-        ============================================= */
-        .slideshow {
-            position: relative;
-            width: 100%;
-            height: 300px;
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            background: var(--surface-inset);
-            border: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-
-        .slide-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .slide-loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .slide-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0,0,0,0.45);
-            color: white;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            font-size: 20px;
-            line-height: 1;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.15s;
-            z-index: 2;
-        }
-
-        .slide-btn:hover { background: rgba(0,0,0,0.7); }
-        .slide-prev { left: 10px; }
-        .slide-next { right: 10px; }
-
-        .slide-dots {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 6px;
-            z-index: 2;
-        }
-
-        .slide-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.5);
-        }
-
-        .slide-dot.active { background: white; }
-
-        /* Leaflet overrides */
-        .leaflet-popup { display: none !important; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="map"></div>
 
-    <!-- HEADER -->
     <header class="header">
         <div>
             <div class="header-logo">CHRONOS</div>
@@ -605,10 +28,8 @@
         </div>
     </header>
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
 
-        <!-- WELCOME PANEL -->
         <div id="panel-welcome" class="panel active">
             <div class="welcome-tag">Erkunde Welterbe</div>
             <h2 class="welcome-title">Die Stätten der Welt</h2>
@@ -621,26 +42,7 @@
                 </button>
             </div>
 
-<div class="filter-section" style="margin-bottom: 15px;">
-                <div class="filter-chips" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
-                    <button class="chip active" data-filter-type="all" data-filter-val="all">Alle</button>
-                    
-                    <button class="chip" data-filter-type="type" data-filter-val="wonder">⭐ Weltwunder</button>
-                    <button class="chip" data-filter-type="type" data-filter-val="heritage">🏛️ Kulturstätten</button>
-                    
-                    <button class="chip" data-filter-type="era" data-filter-val="ancient">Antike</button>
-                    <button class="chip" data-filter-type="era" data-filter-val="medieval">Mittelalter</button>
-                    <button class="chip" data-filter-type="era" data-filter-val="modern">Neuzeit</button>
-                    
-                    <button class="chip" data-filter-type="region" data-filter-val="Europe and North America">Europa/NA</button>
-                    <button class="chip" data-filter-type="region" data-filter-val="Asia and the Pacific">Asien/Pazifik</button>
-                    <button class="chip" data-filter-type="region" data-filter-val="Africa">Afrika</button>
-                    <button class="chip" data-filter-type="region" data-filter-val="Latin America and the Caribbean">Lateinamerika</button>
-                    <button class="chip" data-filter-type="region" data-filter-val="Arab States">Arabische Staaten</button>
-                </div>
-            </div>
-            
-           <div class="filter-container">
+            <div class="filter-container">
                 <div class="filter-group">
                     <div class="filter-label">Filter</div>
                     <div class="filter-chips vertical">
@@ -673,7 +75,15 @@
                 </div>
             </div>
 
-        <!-- DETAILS PANEL -->
+            <div id="view-explore" class="site-list"></div>
+            
+            <div id="view-favorites" style="display:none">
+                <div class="site-list" id="fav-list">
+                    <div class="empty-state">Noch keine Favoriten hinzugefügt.</div>
+                </div>
+            </div>
+        </div>
+
         <div id="panel-details" class="panel">
             <button class="back-btn" id="btn-back">← Zurück zur Übersicht</button>
 
@@ -687,7 +97,7 @@
                 <button class="fav-btn" id="btn-fav">☆</button>
             </div>
             <div class="detail-meta" id="detail-meta">–</div>
-    
+            
             <div class="slideshow" id="slideshow"></div>
             
             <div class="tabs-nav">
@@ -705,14 +115,12 @@
 
     </aside>
 
-    <!-- MAP CONTROLS -->
     <div class="map-controls">
         <button class="ctrl-btn" id="btn-theme" title="Theme wechseln">🌗</button>
         <button class="ctrl-btn" id="btn-zoom-in" title="Heranzoomen">+</button>
         <button class="ctrl-btn" id="btn-zoom-out" title="Herauszoomen">−</button>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
