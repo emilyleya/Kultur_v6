@@ -679,23 +679,61 @@ body.dark .quiz-wrong {
     transition: transform 0.3s ease;
 }
 
-/* ── EPOCHEN FARBEN (BUTTONS & LISTEN-DOTS) ── */
+/* ── EPOCHEN FARBEN (INDIVIDUELLE GRUNDFARBE & HELLES AKTIV-STYLING) ── */
 
-/* Antike: #6a241c */
-.filter-btn.btn-ancient.active {
+/* --- 1. ANTIKE --- */
+/* Unangeklickt (Dunkles Rotbraun) */
+.filter-btn.btn-ancient {
     background: #6a241c !important;
     border-color: #6a241c !important;
     color: #ffffff !important;
 }
-/* Mittelalter: #cf6229 */
-.filter-btn.btn-medieval.active {
+.filter-btn.btn-ancient:hover {
+    background: #852e24 !important;
+    border-color: #852e24 !important;
+}
+/* Aktiviert / Ausgewählt (Leicht helleres Rotbraun) */
+.filter-btn.btn-ancient.active {
+    background: #a8544a !important;
+    border-color: #a8544a !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4); /* Subtiler Innenrahmen für bessere Erkennbarkeit */
+}
+
+/* --- 2. MITTELALTER --- */
+/* Unangeklickt (Sattes Orange) */
+.filter-btn.btn-medieval {
     background: #cf6229 !important;
     border-color: #cf6229 !important;
     color: #ffffff !important;
 }
-/* Neuzeit: #fbbf69 */
-.filter-btn.btn-modern.active {
+.filter-btn.btn-medieval:hover {
+    background: #e37134 !important;
+    border-color: #e37134 !important;
+}
+/* Aktiviert / Ausgewählt (Leicht helleres Orange) */
+.filter-btn.btn-medieval.active {
+    background: #e69367 !important;
+    border-color: #e69367 !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+/* --- 3. NEUZEIT --- */
+/* Unangeklickt (Ockergelb) */
+.filter-btn.btn-modern {
     background: #fbbf69 !important;
     border-color: #fbbf69 !important;
-    color: #3E3530 !important; /* Dunkler Text für besseren Kontrast auf Gelb */
+    color: #3E3530 !important; /* Dunkler Text für Lesbarkeit */
+}
+.filter-btn.btn-modern:hover {
+    background: #fccb83 !important;
+    border-color: #fccb83 !important;
+}
+/* Aktiviert / Ausgewählt (Leicht helleres Pastellgelb) */
+.filter-btn.btn-modern.active {
+    background: #fcd49a !important;
+    border-color: #fcd49a !important;
+    color: #3E3530 !important;
+    box-shadow: inset 0 0 0 2px rgba(62, 53, 48, 0.2); /* Dunkler Innenrahmen für den Kontrast */
 }
