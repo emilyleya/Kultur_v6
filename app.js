@@ -358,9 +358,18 @@ async function showDetails(site, coords) {
     if (metaEl)     metaEl.textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
     if (favBtnEl)   favBtnEl.textContent   = favorites.includes(id) ? '★' : '☆';
 
+    // Standardmäßig aktivieren wir beim Öffnen immer den "Beschreibung"-Tab visuell
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const descTabBtn = document.querySelector('[data-tab="tab-desc"]');
+    if (descTabBtn) descTabBtn.classList.add('active');
+
+    // Wir leeren den Geodaten-Container zuerst komplett aus dem Sichtfeld!
+    const geoEl = document.getElementById('detail-geodata');
+    if (geoEl) geoEl.innerHTML = '';
+
     const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
     
-    // TAB 1: Exklusiv NUR die Texte und der Quiz-Platzhalter – KEINE Geodaten!
+    // Erstbefüllung von TAB 1 (Beschreibung)
     const descEl = document.getElementById('detail-description');
     if (descEl) {
         descEl.innerHTML = `
@@ -373,18 +382,6 @@ async function showDetails(site, coords) {
                 <p class="content-text" id="wiki-extended-text">Lade zusätzliche Details...</p>
             </div>
             <div id="quiz-placeholder"></div>
-        `;
-    }
-
-    // TAB 2: Exklusiv NUR die Geodaten – KEINE Beschreibungen, KEIN Quiz!
-    const geoEl = document.getElementById('detail-geodata');
-    if (geoEl) {
-        geoEl.innerHTML = `
-            <div class="content-block">
-                <div class="content-label">Geografische Daten</div>
-                <p class="content-text"><strong>Fläche:</strong> ${site.area_hectares || '–'} Hektar</p>
-                <p class="content-text"><strong>Region:</strong> ${site.region_en || '–'}</p>
-            </div>
         `;
     }
 
