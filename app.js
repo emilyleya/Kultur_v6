@@ -424,7 +424,10 @@ async function showDetails(site, coords) {
 function renderExploreList() {
     const container = document.getElementById('view-explore');
     container.innerHTML = '';
-    sites.slice(0, 150).forEach(site => {
+    
+    // NEU: Greift nun auf die gefilterten Daten zu statt auf alle
+    const displayList = getFilteredSites();
+    displayList.slice(0, 150).forEach(site => {
         const id    = getSiteId(site);
         const isFav = favorites.includes(id);
         const btn   = document.createElement('button');
