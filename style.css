@@ -206,7 +206,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .site-item:hover { border-color: var(--text-muted); }
-.site-dot { font-size: 12px; color: var(--accent); flex-shrink: 0; }
+.site-dot { font-size: 16px; color: var(--accent); flex-shrink: 0; }
 .site-body { flex: 1; min-width: 0; }
 
 .site-name {
@@ -225,11 +225,18 @@ button { font-family: inherit; cursor: pointer; }
 
 .site-fav {
     font-size: 16px;
-    color: var(--accent);
+    color: inherit; /* Erbt die dynamische Epochenfarbe direkt vom Listenelement */
     background: none;
     border: none;
     padding: 2px 4px;
     flex-shrink: 0;
+    opacity: 0.85;  /* Leicht dezent, damit es elegant wirkt */
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.site-fav:hover {
+    transform: scale(1.2); /* Kleiner, schicker Effekt beim Drüberfahren */
+    opacity: 1;
 }
 
 .empty-state {
