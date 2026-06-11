@@ -189,50 +189,105 @@ async function fetchWikipediaSummary(siteName) {
     }
 }
 
-// ── 7. QUIZ ───────────────────────────────────
-function buildQuiz(site) {
-    const correctYear = parseInt(site.date_inscribed);
-    if (!correctYear) return '';
+// ── 7. QUIZ (DYNAMISCH & INDIVIDUELL) ───────────────────
+function injectAdvancedQuiz(site, wikiText) {
+    const quizContainer = document.getElementById('quiz-placeholder');
+    if (!quizContainer) return;
 
-    const wrongs = new Set();
-    while (wrongs.size < 3) {
-        const offset = (Math.floor(Math.random() * 10) + 1) * (Math.random() < 0.5 ? -1 : 1);
-        const y = correctYear + offset;
-        if (y !== correctYear && y >= 1978 && y <= 2025) wrongs.add(y);
+    const quizPool = [];
+    const textToSearch = (wikiText + " " + (site.short_description_en || "")).toLowerCase();
+
+    // 1. Spezifische Inhalts-Frage: Jahrhundert-Erkennung
+    if (textToSearch.includes("century")) {
+        let correctCentury = "Unbekannt";
+        const centuries = ["12th century", "13th century", "14th century", "15th century", "16th century", "17th century", "18th century", "19th century"];
+        for (let c of centuries) {
+            if (textToSearch.includes(c)) { correctCentury = c; break; }
+        }
+        if (correctCentury !== "Unbekannt") {
+            quizPool.push({
+                question: `In welchem Jahrhundert spielte diese Stätte laut den historischen Berichten eine entscheidende Rolle?`,
+                correct: correctCentury,
+                wrongs: centuries.filter(c => c !== correctCentury).slice(0, 3)
+            });
+        }
     }
-    const options = [...wrongs, correctYear].sort(() => Math.random() - 0.5);
 
-    return `
+    // 2. Spezifische Inhalts-Frage: Architektur & Material
+    if (textToSearch.includes("stone") || textToSearch.includes("brick") || textToSearch.includes("marble")) {
+        let material = textToSearch.includes("marble") ? "Marmor" : textToSearch.includes("brick") ? "Backstein/Ziegel" : "Stein/Fels";
+        quizPool.push({
+            question: `Welches primäre Baumaterial oder geologische Merkmal wird im Informationstext besonders hervorgehoben?`,
+            correct: material,
+            wrongs: ["Holzkonstruktionen", "Beton-Fundamente", "Gusseisen-Verzierungen"].filter(m => m !== material)
+        });
+    }
+
+    // 3. Geographie-Frage (Region)
+    if (site.region_en) {
+        quizPool.push({
+            question: `In welche offizielle UNESCO-Region ist „${site.site || site.name_en}“ geografisch eingeteilt?`,
+            correct: site.region_en,
+            wrongs: ['Europe and North America', 'Asia and the Pacific', 'Latin America and the Caribbean', 'Africa', 'Arab States'].filter(r => r !== site.region_en)
+        });
+    }
+
+    // Fallback: Das präzise Einschreibungsjahr
+    const correctYear = parseInt(site.date_inscribed);
+    if (correctYear) {
+        const yearWrongs = new Set();
+        while (yearWrongs.size < 3) {
+            const offset = (Math.floor(Math.random() * 5) + 1) * (Math.random() < 0.5 ? -1 : 1);
+            const y = correctYear + offset;
+            if (y !== correctYear && y >= 1978 && y <= 2025) yearWrongs.add(String(y));
+        }
+        quizPool.push({
+            question: `In welchem Jahr wurde diese Stätte offiziell in die UNESCO-Welterbeliste eingetragen?`,
+            correct: String(correctYear),
+            wrongs: [...yearWrongs]
+        });
+    }
+
+    // Wähle eine Frage zufällig aus dem Pool
+    const selectedQuiz = quizPool[Math.floor(Math.random() * quizPool.length)];
+    const options = [selectedQuiz.correct, ...selectedQuiz.wrongs].sort(() => Math.random() - 0.5);
+
+    quizContainer.innerHTML = `
         <div class="quiz-card" id="quiz-card">
-            <div class="quiz-label">🎯 Quiz – XP verdienen</div>
-            <div class="quiz-question">In welchem Jahr wurde diese Stätte als UNESCO-Welterbe eingeschrieben?</div>
+            <div class="quiz-label">🎯 Wissenstest – XP verdienen</div>
+            <div class="quiz-question">${selectedQuiz.question}</div>
             <div class="quiz-options">
-                ${options.map(y => `<button class="quiz-opt" data-year="${y}" data-correct="${correctYear}">${y}</button>`).join('')}
+                ${options.map(opt => `<button class="quiz-opt" data-chosen="${opt}" data-correct="${selectedQuiz.correct}">${opt}</button>`).join('')}
             </div>
             <div class="quiz-result" id="quiz-result" style="display:none"></div>
         </div>
     `;
+
+    // Event-Binder direkt aktivieren
+    bindQuizEvents();
 }
 
 function bindQuizEvents() {
     document.querySelectorAll('.quiz-opt').forEach(btn => {
         btn.addEventListener('click', e => {
-            const chosen  = parseInt(e.currentTarget.dataset.year);
-            const correct = parseInt(e.currentTarget.dataset.correct);
+            const chosen  = e.currentTarget.dataset.chosen;
+            const correct = e.currentTarget.dataset.correct;
             const isRight = chosen === correct;
+            
             document.querySelectorAll('.quiz-opt').forEach(b => {
                 b.disabled = true;
-                if (parseInt(b.dataset.year) === correct) b.classList.add('quiz-correct');
+                if (b.dataset.chosen === correct) b.classList.add('quiz-correct');
                 else if (b === e.currentTarget && !isRight) b.classList.add('quiz-wrong');
             });
+            
             const result = document.getElementById('quiz-result');
             result.style.display = 'block';
             if (isRight) {
                 earnXP(25);
-                result.innerHTML = '✅ Richtig! +25 XP';
+                result.innerHTML = '✅ Korrekt analysiert! +25 XP wurden gutgeschrieben.';
                 result.style.color = '#2e7d32';
             } else {
-                result.innerHTML = `❌ Falsch. Die Antwort war ${correct}.`;
+                result.innerHTML = `❌ Leider falsch. Die richtige Antwort lautet: <strong>${correct}</strong>.`;
                 result.style.color = '#c62828';
             }
         });
