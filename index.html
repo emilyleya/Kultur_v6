@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
 </head>
 <body>
 
@@ -111,9 +113,65 @@
             <div id="tab-geo" class="tab-panel">
                 <div id="detail-geodata" class="content-text">–</div>
             </div>
+
+            <!-- Virtual Tour Button -->
+            <div class="tour-btn-wrapper">
+                <button class="tour-start-btn" id="btn-start-tour">
+                    <span class="tour-btn-icon">▶</span>
+                    <span class="tour-btn-text">
+                        <span class="tour-btn-label">Start Virtual Tour</span>
+                        <span class="tour-btn-sub">3D Karte · Historische Anekdoten</span>
+                    </span>
+                    <span class="tour-btn-arrow">→</span>
+                </button>
+            </div>
         </div>
 
     </aside>
+
+    <!-- ═══════════════════════════════════════════
+         VIRTUAL TOUR OVERLAY
+    ═══════════════════════════════════════════ -->
+    <div id="tour-overlay" class="tour-overlay hidden">
+
+        <!-- Header Bar -->
+        <div class="tour-overlay-header">
+            <div class="tour-overlay-title">
+                <span class="tour-title-eyebrow">Virtual Tour</span>
+                <span class="tour-title-name" id="tour-site-name">–</span>
+            </div>
+            <div class="tour-header-controls">
+                <div class="tour-progress-track">
+                    <span class="tour-progress-label" id="tour-progress-label">Station 1 / 3</span>
+                    <div class="tour-progress-bar">
+                        <div class="tour-progress-fill" id="tour-progress-fill" style="width: 33%"></div>
+                    </div>
+                </div>
+                <button class="tour-close-btn" id="btn-close-tour">✕</button>
+            </div>
+        </div>
+
+        <!-- Split Body -->
+        <div class="tour-body">
+
+            <!-- LEFT: Scrollable Story -->
+            <div class="tour-story-pane" id="tour-story-pane">
+                <div class="tour-stations" id="tour-stations">
+                    <!-- Stations injected by JS -->
+                </div>
+            </div>
+
+            <!-- RIGHT: MapLibre 3D Map -->
+            <div class="tour-map-pane">
+                <div id="tour-map-3d"></div>
+                <div class="tour-map-badge" id="tour-map-badge">
+                    <span class="tour-map-badge-dot"></span>
+                    <span id="tour-map-badge-text">Fliege zur Station…</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
     <button class="toggle-sidebar-btn" id="btn-toggle-sidebar" title="Seitenleiste ein-/ausklappen">
         <span>◂</span>
