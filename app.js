@@ -62,18 +62,40 @@ function initMap() {
 
 // ── 5. MARKERS ────────────────────────────────
 function addMarkers() {
-    sites.forEach(site => {
+    // 1. Vorhandene Marker von der Karte entfernen
+    mapMarkers.forEach(m => map.removeLayer(m));
+    mapMarkers = [];
+
+    // 2. Nur gefilterte Stätten holen
+    const filteredSites = getFilteredSites();
+
+    filteredSites.forEach(site => {
         const lat = parseCoord(site.latitude);
         const lng = parseCoord(site.longitude);
         if (lat === null || lng === null) return;
-        const icon = L.divIcon({
-            className: 'custom-marker',
-            html: `<div class="marker-wrap"><div class="marker-core" style="background:#FF8C42"></div></div>`,
-            iconSize: [14, 14], iconAnchor: [7, 7]
-        });
-        L.marker([lat, lng], { icon })
+
+        let icon;
+        
+        // Wenn Weltwunder -> Goldenes Stern-Icon, sonst Standard-Punkt
+        if (isWorldWonder(site)) {
+            icon = L.divIcon({
+                className: 'wonder-marker',
+                html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
+                iconSize: [24, 24], iconAnchor: [12, 12]
+            });
+        } else {
+            icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div class="marker-wrap"><div class="marker-core" style="background:#FF8C42"></div></div>`,
+                iconSize: [14, 14], iconAnchor: [7, 7]
+            });
+        }
+
+        const marker = L.marker([lat, lng], { icon })
             .addTo(map)
             .on('click', () => showDetails(site, [lat, lng]));
+            
+        mapMarkers.push(marker); // Im Array speichern für spätere Filter-Wechsel
     });
 }
 
