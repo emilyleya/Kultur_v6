@@ -254,15 +254,36 @@ async function showDetails(site, coords) {
     document.getElementById('detail-meta').textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
     document.getElementById('btn-fav').textContent         = favorites.includes(id) ? '★' : '☆';
 
-    // Beschreibung + Quiz
+// --- NEU: HIER WIRD NUN DER TEXT UND DAS QUIZ ASYNCHRON GELADEN ---
+    const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
+    
     document.getElementById('detail-description').innerHTML = `
         <div class="content-block">
             <div class="content-label">UNESCO Beschreibung</div>
-            <p class="content-text">${site.short_description_en || 'Keine Beschreibung vorhanden.'}</p>
+            <p class="content-text">${dbDescription}</p>
         </div>
-        ${buildQuiz(site)}
+        <div class="content-block" id="wiki-extended-block" style="display:none">
+            <div class="content-label">Erweiterte Informationen (Wikipedia)</div>
+            <p class="content-text" id="wiki-extended-text">Lade zusätzliche Details...</p>
+        </div>
+        <div id="quiz-placeholder"></div>
     `;
-    bindQuizEvents();
+
+    // Wikipedia-Text im Hintergrund abrufen und Quiz danach starten
+    fetchWikipediaSummary(siteName).then(wikiText => {
+        const wikiBlock = document.getElementById('wiki-extended-block');
+        const wikiPara = document.getElementById('wiki-extended-text');
+        
+        if (wikiText && wikiText.trim().length > 10) {
+            wikiPara.textContent = wikiText;
+            wikiBlock.style.display = 'block';
+            // Quiz basierend auf DB + Wiki-Inhalt injizieren
+            injectAdvancedQuiz(site, wikiText);
+        } else {
+            // Fallback: Wenn kein Wiki-Text existiert, nur DB-Daten fürs Quiz nutzen
+            injectAdvancedQuiz(site, "");
+        }
+    });
 
     // Geodaten
     document.getElementById('detail-geodata').innerHTML = `
