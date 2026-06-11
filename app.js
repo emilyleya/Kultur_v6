@@ -538,6 +538,11 @@ function bindEvents() {
             applyFiltering();
         });
     });
+    // Event-Listener zum Ein- und Ausklappen der Seitenleiste
+    const sidebar = document.querySelector('.sidebar');
+    document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+    });
 }
 
 // ── 13. HELPERS ───────────────────────────────
