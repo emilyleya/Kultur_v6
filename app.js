@@ -322,3 +322,7 @@ function bindQuizEvents() {
             result.style.display = 'block';
             if (isRight) {
                 earnXP(
+            }
+
+
+                    
