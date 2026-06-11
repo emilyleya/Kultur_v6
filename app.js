@@ -327,7 +327,10 @@ function bindQuizEvents() {
 // ── 8. DETAILS ────────────────────────────────
 async function showDetails(site, coords) {
     activeSite = site;
+    
+    // Sidebar wieder reinschieben, falls sie geschlossen war
     document.querySelector('.sidebar').classList.remove('collapsed');
+    
     map.flyTo(coords, 11, { duration: 1.6 });
 
     const id       = getSiteId(site);
@@ -341,7 +344,6 @@ async function showDetails(site, coords) {
 
     const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
     
-    // Geodaten & Kriterien direkt unter die Beschreibung gehängt
     document.getElementById('detail-description').innerHTML = `
         <div class="content-block">
             <div class="content-label">UNESCO Beschreibung</div>
@@ -359,7 +361,6 @@ async function showDetails(site, coords) {
         <div id="quiz-placeholder"></div>
     `;
 
-    // Falls die Geodaten-ID noch existiert, leeren wir sie, um Fehler abzufangen
     const geoEl = document.getElementById('detail-geodata');
     if (geoEl) geoEl.innerHTML = '';
 
@@ -508,7 +509,7 @@ function bindEvents() {
         });
     });
 
-    // Kombinierter Filter Event-Listener (Sauber geschlossen!)
+    // Kombinierter Filter Event-Listener
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', e => {
             const type = e.currentTarget.dataset.filterType;
@@ -538,11 +539,18 @@ function bindEvents() {
             applyFiltering();
         });
     });
+
     // Event-Listener zum Ein- und Ausklappen der Seitenleiste
     const sidebar = document.querySelector('.sidebar');
-    document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-    });
+    const toggleBtn = document.getElementById('btn-toggle-sidebar');
+    
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            // Leaflet mitteilen, dass sich der Container geändert hat
+            setTimeout(() => { map.invalidateSize(); }, 400);
+        });
+    }
 }
 
 // ── 13. HELPERS ───────────────────────────────
