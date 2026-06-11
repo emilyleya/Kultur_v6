@@ -1,5 +1,5 @@
 // =============================================
-//  CHRONOS – app.js
+//  CHRONOS – app.js (Kombinierte Filter & Geo-Fix)
 // =============================================
 
 // ── 1. CONFIG ─────────────────────────────────
@@ -12,21 +12,22 @@ const TILE_LAYERS = {
 };
 
 // ── 2. STATE ──────────────────────────────────
-let map               = null;
-let tileLayer         = null;
-let theme             = 'light';
-let sites             = [];
-let activeSite        = null;
-let currentView       = 'explore';
-let userXP            = parseInt(localStorage.getItem('chronos_xp'))    || 0;
-let favorites         = JSON.parse(localStorage.getItem('chronos_favs')) || [];
-// Ersetze die alten beiden Filter-Variablen durch dieses Objekt:
+let map         = null;
+let tileLayer   = null;
+let theme       = 'light';
+let sites       = [];
+let activeSite  = null;
+let currentView = 'explore';
+let userXP      = parseInt(localStorage.getItem('chronos_xp'))    || 0;
+let favorites   = JSON.parse(localStorage.getItem('chronos_favs')) || [];
+let mapMarkers  = [];
+
+// Kombinierte Filter Speicher
 let activeFilters = {
     type: 'all',
     era: 'all',
     region: 'all'
 };
-let mapMarkers        = [];
 
 // ── 3. SUPABASE ───────────────────────────────
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -64,7 +65,7 @@ function initMap() {
     tileLayer = L.tileLayer(TILE_LAYERS[theme], { maxZoom: 19, noWrap: true }).addTo(map);
 }
 
-// ── 5. MARKERS ────────────────────────────────
+// ── 5. MARKERS & FILTER LOGIC ─────────────────
 function addMarkers() {
     mapMarkers.forEach(m => map.removeLayer(m));
     mapMarkers = [];
@@ -101,27 +102,19 @@ function addMarkers() {
 
 function getFilteredSites() {
     return sites.filter(site => {
-        // 1. Filter nach Typ (Weltwunder / Kulturstätten)
         if (activeFilters.type !== 'all') {
             const isWonder = isWorldWonder(site);
             if (activeFilters.type === 'wonder' && !isWonder) return false;
             if (activeFilters.type === 'heritage' && isWonder) return false;
         }
-        
-        // 2. Filter nach Epoche (Antike / Mittelalter / Neuzeit)
         if (activeFilters.era !== 'all') {
             if (getSiteEra(site) !== activeFilters.era) return false;
         }
-        
-        // 3. Filter nach Region / Kontinent (Fehlertolerant umgebaut)
         if (activeFilters.region !== 'all') {
             const siteRegion = String(site.region_en || site.region || "").toLowerCase();
             const filterRegion = String(activeFilters.region).toLowerCase();
-            
-            // Prüft, ob der Name der Region den Filterwert zumindest beinhaltet
             if (!siteRegion.includes(filterRegion)) return false;
         }
-        
         return true;
     });
 }
@@ -287,6 +280,7 @@ function injectAdvancedQuiz(site, wikiText) {
         });
     }
 
+    if (quizPool.length === 0) return;
     const selectedQuiz = quizPool[Math.floor(Math.random() * quizPool.length)];
     const options = [selectedQuiz.correct, ...selectedQuiz.wrongs].sort(() => Math.random() - 0.5);
 
@@ -344,9 +338,9 @@ async function showDetails(site, coords) {
     document.getElementById('detail-meta').textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
     document.getElementById('btn-fav').textContent         = favorites.includes(id) ? '★' : '☆';
 
-   const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
+    const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
     
-    // NEU: Beschreibung und Geodaten (ohne Kriterien) direkt zusammen in einem Block
+    // Geodaten & Kriterien direkt unter die Beschreibung gehängt
     document.getElementById('detail-description').innerHTML = `
         <div class="content-block">
             <div class="content-label">UNESCO Beschreibung</div>
@@ -364,8 +358,18 @@ async function showDetails(site, coords) {
         <div id="quiz-placeholder"></div>
     `;
 
-    // Der zweite Tab bleibt einfach leer, da wir ihn gleich im HTML/CSS entfernen können
-    document.getElementById('detail-geodata').innerHTML = '';
+    // Falls die Geodaten-ID noch existiert, leeren wir sie, um Fehler abzufangen
+    const geoEl = document.getElementById('detail-geodata');
+    if (geoEl) geoEl.innerHTML = '';
+
+    document.getElementById('panel-welcome').classList.remove('active');
+    document.getElementById('panel-details').classList.add('active');
+
+    const slideshowEl = document.getElementById('slideshow');
+    if (slideshowEl) {
+        slideshowEl.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
+        fetchSlideshow(siteName).then(urls => renderSlideshow(urls));
+    }
 
     fetchWikipediaSummary(siteName).then(wikiText => {
         const wikiBlock = document.getElementById('wiki-extended-block');
@@ -464,6 +468,7 @@ function earnXP(amount) {
     updateXP();
 }
 
+// ── 12. EVENTS ────────────────────────────────
 function updateXP() {
     const xpPointsEl = document.getElementById('xp-points');
     const xpFillEl = document.getElementById('xp-fill');
@@ -474,7 +479,6 @@ function updateXP() {
     }
 }
 
-// ── 12. EVENTS ────────────────────────────────
 function bindEvents() {
     document.getElementById('btn-theme').addEventListener('click', () => {
         theme = theme === 'light' ? 'dark' : 'light';
@@ -502,55 +506,38 @@ function bindEvents() {
             document.getElementById('view-favorites').style.display = currentView === 'favorites' ? 'block' : 'none';
         });
     });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
-        });
-    });
 
-// Filter-Buttons Event Listener für kombinierte Filter
+    // Kombinierter Filter Event-Listener (Sauber geschlossen!)
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', e => {
             const type = e.currentTarget.dataset.filterType;
             const val  = e.currentTarget.dataset.filterVal;
             
             if (type === 'all') {
-                // Wenn "Alle" geklickt wird, setzen wir alle Kategorien zurück
                 activeFilters.type = 'all';
                 activeFilters.era = 'all';
                 activeFilters.region = 'all';
-                
-                // Alle Buttons deaktivieren, nur den "Alle"-Button aktivieren
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 document.querySelector('[data-filter-val="all"]').classList.add('active');
             } else {
-                // "Alle"-Button visuell deaktivieren
                 document.querySelector('[data-filter-val="all"]').classList.remove('active');
                 
-                // Wenn der geklickte Button bereits aktiv war -> deaktivieren (Toggle-Funktion)
                 if (e.currentTarget.classList.contains('active')) {
                     e.currentTarget.classList.remove('active');
                     activeFilters[type] = 'all';
                     
-                    // Falls jetzt gar kein Filter mehr aktiv ist, "Alle" wieder aktivieren
                     const anyActive = Object.values(activeFilters).some(v => v !== 'all');
                     if (!anyActive) document.querySelector('[data-filter-val="all"]').classList.add('active');
                 } else {
-                    // Alle Buttons derselben Gruppe deaktivieren (z.B. andere Kontinente abwählen)
                     document.querySelectorAll(`.filter-btn[data-filter-type="${type}"]`).forEach(b => b.classList.remove('active'));
-                    // Geklickten Button aktivieren
                     e.currentTarget.classList.add('active');
                     activeFilters[type] = val;
                 }
             }
-            
-            // Filterung live ausführen
             applyFiltering();
         });
     });
+}
 
 // ── 13. HELPERS ───────────────────────────────
 function parseCoord(val) {
