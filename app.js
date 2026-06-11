@@ -507,16 +507,46 @@ function bindEvents() {
         });
     });
 
+// Filter-Buttons Event Listener für kombinierte Filter
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', e => {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            currentFilterType = e.currentTarget.dataset.filterType;
-            currentFilterVal  = e.currentTarget.dataset.filterVal;
+            const type = e.currentTarget.dataset.filterType;
+            const val  = e.currentTarget.dataset.filterVal;
+            
+            if (type === 'all') {
+                // Wenn "Alle" geklickt wird, setzen wir alle Kategorien zurück
+                activeFilters.type = 'all';
+                activeFilters.era = 'all';
+                activeFilters.region = 'all';
+                
+                // Alle Buttons deaktivieren, nur den "Alle"-Button aktivieren
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('[data-filter-val="all"]').classList.add('active');
+            } else {
+                // "Alle"-Button visuell deaktivieren
+                document.querySelector('[data-filter-val="all"]').classList.remove('active');
+                
+                // Wenn der geklickte Button bereits aktiv war -> deaktivieren (Toggle-Funktion)
+                if (e.currentTarget.classList.contains('active')) {
+                    e.currentTarget.classList.remove('active');
+                    activeFilters[type] = 'all';
+                    
+                    // Falls jetzt gar kein Filter mehr aktiv ist, "Alle" wieder aktivieren
+                    const anyActive = Object.values(activeFilters).some(v => v !== 'all');
+                    if (!anyActive) document.querySelector('[data-filter-val="all"]').classList.add('active');
+                } else {
+                    // Alle Buttons derselben Gruppe deaktivieren (z.B. andere Kontinente abwählen)
+                    document.querySelectorAll(`.filter-btn[data-filter-type="${type}"]`).forEach(b => b.classList.remove('active'));
+                    // Geklickten Button aktivieren
+                    e.currentTarget.classList.add('active');
+                    activeFilters[type] = val;
+                }
+            }
+            
+            // Filterung live ausführen
             applyFiltering();
         });
     });
-}
 
 // ── 13. HELPERS ───────────────────────────────
 function parseCoord(val) {
