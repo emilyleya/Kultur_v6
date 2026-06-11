@@ -327,6 +327,7 @@ function bindQuizEvents() {
 // ── 8. DETAILS ────────────────────────────────
 async function showDetails(site, coords) {
     activeSite = site;
+    document.querySelector('.sidebar').classList.remove('collapsed');
     map.flyTo(coords, 11, { duration: 1.6 });
 
     const id       = getSiteId(site);
