@@ -724,7 +724,7 @@ body.dark .quiz-wrong {
 .filter-btn.btn-modern {
     background: #fbbf69 !important;
     border-color: #fbbf69 !important;
-    color: #3E3530 !important; /* Dunkler Text für Lesbarkeit */
+    color: #ffffff !important; /* Dunkler Text für Lesbarkeit */
 }
 .filter-btn.btn-modern:hover {
     background: #fccb83 !important;
