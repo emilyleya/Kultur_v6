@@ -84,10 +84,18 @@ function addMarkers() {
                 html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
                 iconSize: [24, 24], iconAnchor: [12, 12]
             });
-        } else {
+       } else {
+            // Ermittle die Epoche für die dynamische Farbe des Punktes
+            const era = getSiteEra(site);
+            let markerColor = '#FF8C42'; // Fallback-Farbe
+            
+            if (era === 'ancient')  markerColor = '#6a241c';
+            if (era === 'medieval') markerColor = '#cf6229';
+            if (era === 'modern')   markerColor = '#fbbf69';
+
             icon = L.divIcon({
                 className: 'custom-marker',
-                html: `<div class="marker-wrap"><div class="marker-core" style="background:#FF8C42"></div></div>`,
+                html: `<div class="marker-wrap"><div class="marker-core" style="background:${markerColor}"></div></div>`,
                 iconSize: [14, 14], iconAnchor: [7, 7]
             });
         }
