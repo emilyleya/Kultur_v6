@@ -1,5 +1,4 @@
 // ── 8. DETAILS ────────────────────────────────
-// ── 8. DETAILS ────────────────────────────────
 async function showDetails(site, coords) {
     // SICHERHEITS-CHECK: Falls die Daten noch nicht da sind, garnicht erst ausführen
     if (!site) return;
