@@ -98,6 +98,29 @@ function addMarkers() {
         mapMarkers.push(marker); // Im Array speichern für spätere Filter-Wechsel
     });
 }
+function getFilteredSites() {
+    return sites.filter(site => {
+        if (currentFilterType === 'all') return true;
+        
+        if (currentFilterType === 'type') {
+            if (currentFilterVal === 'wonder') return isWorldWonder(site);
+            if (currentFilterVal === 'heritage') return !isWorldWonder(site);
+        }
+        if (currentFilterType === 'era') {
+            return getSiteEra(site) === currentFilterVal;
+        }
+        if (currentFilterType === 'region') {
+            return site.region_en === currentFilterVal;
+        }
+        return true;
+    });
+}
+
+function applyFiltering() {
+    // Aktualisiert sowohl die Marker auf der Karte als auch die Seitenliste
+    addMarkers();
+    renderExploreList();
+}
 
 // ── 6. WIKIPEDIA SLIDESHOW ────────────────────
 async function fetchSlideshow(siteName) {
