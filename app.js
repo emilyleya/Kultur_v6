@@ -330,11 +330,18 @@ async function showDetails(site, coords) {
     document.getElementById('detail-meta').textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
     document.getElementById('btn-fav').textContent         = favorites.includes(id) ? '★' : '☆';
 
-    const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
+   const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
+    
+    // NEU: Beschreibung und Geodaten (ohne Kriterien) direkt zusammen in einem Block
     document.getElementById('detail-description').innerHTML = `
         <div class="content-block">
             <div class="content-label">UNESCO Beschreibung</div>
             <p class="content-text">${dbDescription}</p>
+        </div>
+        <div class="content-block" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <div class="content-label">Geografische Daten</div>
+            <p class="content-text"><strong>Fläche:</strong> ${site.area_hectares || '–'} Hektar</p>
+            <p class="content-text"><strong>Region:</strong> ${site.region_en || '–'}</p>
         </div>
         <div class="content-block" id="wiki-extended-block" style="display:none">
             <div class="content-label">Erweiterte Informationen (Wikipedia)</div>
@@ -343,28 +350,8 @@ async function showDetails(site, coords) {
         <div id="quiz-placeholder"></div>
     `;
 
-    document.getElementById('detail-geodata').innerHTML = `
-        <div class="content-block">
-            <div class="content-label">Geografische Daten</div>
-            <p class="content-text">Fläche: ${site.area_hectares || '–'} Hektar</p>
-            <p class="content-text">Region: ${site.region_en || '–'}</p>
-            <p class="content-text">Kriterien: ${site.criteria_txt || '–'}</p>
-        </div>
-    `;
-
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelector('[data-tab="tab-desc"]').classList.add('active');
-    document.getElementById('tab-desc').classList.add('active');
-
-    document.getElementById('panel-welcome').classList.remove('active');
-    document.getElementById('panel-details').classList.add('active');
-
-    const slideshowEl = document.getElementById('slideshow');
-    if (slideshowEl) {
-        slideshowEl.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
-        fetchSlideshow(siteName).then(urls => renderSlideshow(urls));
-    }
+    // Der zweite Tab bleibt einfach leer, da wir ihn gleich im HTML/CSS entfernen können
+    document.getElementById('detail-geodata').innerHTML = '';
 
     fetchWikipediaSummary(siteName).then(wikiText => {
         const wikiBlock = document.getElementById('wiki-extended-block');
