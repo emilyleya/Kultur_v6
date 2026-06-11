@@ -929,29 +929,86 @@ input[type="range"].chrono-slider::-webkit-slider-thumb {
     display: none !important; 
 }
 
-/* Styling für die neuen Filter-Chips – angepasst an dein Farbthema */
-.chip {
-    padding: 6px 12px;
-    border-radius: 20px;
+/* Hauptcontainer für die Filter */
+.filter-container {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Label für die Hauptüberschrift */
+.filter-label {
     font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+/* Trennlinien mit Text im Design der restlichen App */
+.filter-divider {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: center;
+    letter-spacing: 0.8px;
+    margin: 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.filter-divider::before,
+.filter-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--surface-border);
+}
+
+/* Anordnung der Knöpfe */
+.filter-chips.vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.filter-chips.row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Die überarbeiteten, eleganten Buttons */
+.chip {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface-inset);
+    border: 1px solid var(--surface-border);
+    background: var(--card-bg);
     color: var(--text-muted);
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+.filter-chips.row .chip {
+    text-align: center;
 }
 .chip:hover {
     border-color: var(--text-muted);
-    color: var(--text);
+    color: var(--text-main);
 }
 .chip.active {
-    background: var(--text);
-    color: var(--bg);
-    border-color: var(--text);
+    background: var(--text-main);
+    color: var(--bg-main);
+    border-color: var(--text-main);
+    font-weight: 600;
 }
 
-/* Weltwunder Stern-Glyphe auf der Karte (Hintergrund unsichtbar, damit nur der Stern glänzt) */
+/* Weltwunder Stern-Glyphe auf der Karte */
 .wonder-marker {
     background: none !important;
     border: none !important;
@@ -966,7 +1023,7 @@ input[type="range"].chrono-slider::-webkit-slider-thumb {
 }
 .wonder-star-glyph {
     font-size: 22px;
-    color: #e0a900; /* Nutzt dein definiertes Welterbe-Gold */
+    color: #e0a900;
     text-shadow: 0 1px 4px rgba(0,0,0,0.4);
     z-index: 2;
     animation: wonderPulse 2.5s infinite ease-in-out;
