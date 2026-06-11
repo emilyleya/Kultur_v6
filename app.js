@@ -333,6 +333,7 @@ function bindQuizEvents() {
 }
 
 // ── 8. DETAILS ────────────────────────────────
+// ── 8. DETAILS ────────────────────────────────
 async function showDetails(site, coords) {
     activeSite = site;
     
@@ -352,8 +353,6 @@ async function showDetails(site, coords) {
 
     const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
     
-   const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
-    
     // TAB 1: Nur die Text-Inhalte (UNESCO & Wikipedia)
     document.getElementById('detail-description').innerHTML = `
         <div class="content-block">
@@ -367,16 +366,25 @@ async function showDetails(site, coords) {
         <div id="quiz-placeholder"></div>
     `;
 
-    // TAB 2: Hier kommen die Geodaten (ohne Kriterien) exklusiv rein
+    // TAB 2: Hier kommen die Geodaten exklusiv rein
     const geoEl = document.getElementById('detail-geodata');
     if (geoEl) {
         geoEl.innerHTML = `
             <div class="content-block">
-                <div class="content-label">Geografische Daten</div>
+                <div class="content-label">geografic data</div>
                 <p class="content-text"><strong>Fläche:</strong> ${site.area_hectares || '–'} Hektar</p>
                 <p class="content-text"><strong>Region:</strong> ${site.region_en || '–'}</p>
             </div>
         `;
+    }
+
+    document.getElementById('panel-welcome').classList.remove('active');
+    document.getElementById('panel-details').classList.add('active');
+
+    const slideshowEl = document.getElementById('slideshow');
+    if (slideshowEl) {
+        slideshowEl.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
+        fetchSlideshow(siteName).then(urls => renderSlideshow(urls));
     }
 
     fetchWikipediaSummary(siteName).then(wikiText => {
