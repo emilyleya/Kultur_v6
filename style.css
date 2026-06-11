@@ -678,3 +678,24 @@ body.dark .quiz-wrong {
     display: inline-block;
     transition: transform 0.3s ease;
 }
+
+/* ── EPOCHEN FARBEN (BUTTONS & LISTEN-DOTS) ── */
+
+/* Antike: #6a241c */
+.filter-btn.btn-ancient.active {
+    background: #6a241c !important;
+    border-color: #6a241c !important;
+    color: #ffffff !important;
+}
+/* Mittelalter: #cf6229 */
+.filter-btn.btn-medieval.active {
+    background: #cf6229 !important;
+    border-color: #cf6229 !important;
+    color: #ffffff !important;
+}
+/* Neuzeit: #fbbf69 */
+.filter-btn.btn-modern.active {
+    background: #fbbf69 !important;
+    border-color: #fbbf69 !important;
+    color: #3E3530 !important; /* Dunkler Text für besseren Kontrast auf Gelb */
+}
