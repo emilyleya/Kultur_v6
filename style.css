@@ -928,3 +928,51 @@ input[type="range"].chrono-slider::-webkit-slider-thumb {
 .leaflet-popup { 
     display: none !important; 
 }
+
+/* Styling für die neuen Filter-Chips – angepasst an dein Farbthema */
+.chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface-inset);
+    color: var(--text-muted);
+    transition: all 0.2s;
+}
+.chip:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
+}
+.chip.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+}
+
+/* Weltwunder Stern-Glyphe auf der Karte (Hintergrund unsichtbar, damit nur der Stern glänzt) */
+.wonder-marker {
+    background: none !important;
+    border: none !important;
+}
+.wonder-wrap {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.wonder-star-glyph {
+    font-size: 22px;
+    color: #e0a900; /* Nutzt dein definiertes Welterbe-Gold */
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    z-index: 2;
+    animation: wonderPulse 2.5s infinite ease-in-out;
+}
+@keyframes wonderPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
