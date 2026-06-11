@@ -583,12 +583,17 @@ function getSiteEra(site) {
 }
 
 function isWorldWonder(site) {
-    const id = getSiteId(site);
-    const text = ((site.site || site.name_en || "") + " " + (site.short_description_en || "")).toLowerCase();
+    // Holt den englischen Namen der Stätte aus deiner Datenbank
+    const name = (site.site || site.name_en || "").toLowerCase();
     
-    // Erkennt bekannte Weltwunder über Beispiel-IDs oder Texttreffer
-    const wonderIds = [162, 252, 624, 483]; 
-    return wonderIds.includes(id) || text.includes("wonder of the world") || text.includes("seven wonders");
+    // Prüft auf die exakten Begriffe der 7 neuen Weltwunder in der UNESCO-Liste
+    return name.includes("great wall") ||          // Chinesische Mauer
+           name.includes("petra") ||               // Felsenstadt Petra
+           name.includes("rio de janeiro") ||      // Cristo Redentor (unter Rio de Janeiro gelistet)
+           name.includes("machu picchu") ||        // Machu Picchu
+           name.includes("chichen") ||             // Chichén Itzá
+           name.includes("colosseum") ||           // Kolosseum (oder "historic centre of rome")
+           name.includes("taj mahal");             // Taj Mahal
 }
 
 // ── START ─────────────────────────────────────
