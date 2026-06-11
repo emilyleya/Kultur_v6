@@ -616,15 +616,15 @@ body.dark .quiz-wrong {
 }
 
 .wonder-star-glyph {
-    font-size: 22px;
-    color: #e0a900;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    font-size: 14px; /* Kleinerer, feinerer Stern */
+    color: #401B02;    /* Dein gewünschtes Dunkelbraun */
+    text-shadow: 0 1px 2px rgba(255,255,255,0.6); /* Heller Schatten, damit das Braun auf dunkler Map lesbar ist */
     z-index: 2;
-    animation: wonderPulse 2.5s infinite ease-in-out;
+    animation: wonderPulse 3s infinite ease-in-out;
 }
 
 @keyframes wonderPulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
+    50% { transform: scale(1.1); } /* Minimale Bewegung, damit es edel bleibt */
     100% { transform: scale(1); }
 }
