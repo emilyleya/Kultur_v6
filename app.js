@@ -189,7 +189,7 @@ async function fetchWikipediaSummary(siteName) {
     }
 }
 
-// ── 7. QUIZ (DYNAMISCH & INDIVIDUELL) ───────────────────
+// ── 7. QUIZ (DYNAMIC & INDIVIDUAL - ENGLISH VERSION) ───
 function injectAdvancedQuiz(site, wikiText) {
     const quizContainer = document.getElementById('quiz-placeholder');
     if (!quizContainer) return;
@@ -197,42 +197,42 @@ function injectAdvancedQuiz(site, wikiText) {
     const quizPool = [];
     const textToSearch = (wikiText + " " + (site.short_description_en || "")).toLowerCase();
 
-    // 1. Spezifische Inhalts-Frage: Jahrhundert-Erkennung
+    // 1. Century detection
     if (textToSearch.includes("century")) {
-        let correctCentury = "Unbekannt";
+        let correctCentury = "Unknown";
         const centuries = ["12th century", "13th century", "14th century", "15th century", "16th century", "17th century", "18th century", "19th century"];
         for (let c of centuries) {
             if (textToSearch.includes(c)) { correctCentury = c; break; }
         }
-        if (correctCentury !== "Unbekannt") {
+        if (correctCentury !== "Unknown") {
             quizPool.push({
-                question: `In welchem Jahrhundert spielte diese Stätte laut den historischen Berichten eine entscheidende Rolle?`,
+                question: `According to historical records, in which century did this site play a significant role?`,
                 correct: correctCentury,
                 wrongs: centuries.filter(c => c !== correctCentury).slice(0, 3)
             });
         }
     }
 
-    // 2. Spezifische Inhalts-Frage: Architektur & Material
+    // 2. Architecture & Material
     if (textToSearch.includes("stone") || textToSearch.includes("brick") || textToSearch.includes("marble")) {
-        let material = textToSearch.includes("marble") ? "Marmor" : textToSearch.includes("brick") ? "Backstein/Ziegel" : "Stein/Fels";
+        let material = textToSearch.includes("marble") ? "Marble" : textToSearch.includes("brick") ? "Brick" : "Stone / Rock";
         quizPool.push({
-            question: `Welches primäre Baumaterial oder geologische Merkmal wird im Informationstext besonders hervorgehoben?`,
+            question: `Which primary building material or geological feature is highlighted in the information text?`,
             correct: material,
-            wrongs: ["Holzkonstruktionen", "Beton-Fundamente", "Gusseisen-Verzierungen"].filter(m => m !== material)
+            wrongs: ["Wooden structures", "Concrete foundations", "Cast iron ornaments"].filter(m => m !== material)
         });
     }
 
-    // 3. Geographie-Frage (Region)
+    // 3. Geography (UNESCO Region)
     if (site.region_en) {
         quizPool.push({
-            question: `In welche offizielle UNESCO-Region ist „${site.site || site.name_en}“ geografisch eingeteilt?`,
+            question: `In which official UNESCO region is "${site.site || site.name_en}" geographically classified?`,
             correct: site.region_en,
             wrongs: ['Europe and North America', 'Asia and the Pacific', 'Latin America and the Caribbean', 'Africa', 'Arab States'].filter(r => r !== site.region_en)
         });
     }
 
-    // Fallback: Das präzise Einschreibungsjahr
+    // Fallback: Inscription Year
     const correctYear = parseInt(site.date_inscribed);
     if (correctYear) {
         const yearWrongs = new Set();
@@ -242,19 +242,19 @@ function injectAdvancedQuiz(site, wikiText) {
             if (y !== correctYear && y >= 1978 && y <= 2025) yearWrongs.add(String(y));
         }
         quizPool.push({
-            question: `In welchem Jahr wurde diese Stätte offiziell in die UNESCO-Welterbeliste eingetragen?`,
+            question: `In which year was this site officially inscribed onto the UNESCO World Heritage list?`,
             correct: String(correctYear),
             wrongs: [...yearWrongs]
         });
     }
 
-    // Wähle eine Frage zufällig aus dem Pool
+    // Select a random question from the pool
     const selectedQuiz = quizPool[Math.floor(Math.random() * quizPool.length)];
     const options = [selectedQuiz.correct, ...selectedQuiz.wrongs].sort(() => Math.random() - 0.5);
 
     quizContainer.innerHTML = `
         <div class="quiz-card" id="quiz-card">
-            <div class="quiz-label">🎯 Wissenstest – XP verdienen</div>
+            <div class="quiz-label">🎯 Knowledge Check – Earn XP</div>
             <div class="quiz-question">${selectedQuiz.question}</div>
             <div class="quiz-options">
                 ${options.map(opt => `<button class="quiz-opt" data-chosen="${opt}" data-correct="${selectedQuiz.correct}">${opt}</button>`).join('')}
@@ -263,7 +263,6 @@ function injectAdvancedQuiz(site, wikiText) {
         </div>
     `;
 
-    // Event-Binder direkt aktivieren
     bindQuizEvents();
 }
 
@@ -284,10 +283,10 @@ function bindQuizEvents() {
             result.style.display = 'block';
             if (isRight) {
                 earnXP(25);
-                result.innerHTML = '✅ Korrekt analysiert! +25 XP wurden gutgeschrieben.';
+                result.innerHTML = '✅ Correct analysis! +25 XP credited.';
                 result.style.color = '#2e7d32';
             } else {
-                result.innerHTML = `❌ Leider falsch. Die richtige Antwort lautet: <strong>${correct}</strong>.`;
+                result.innerHTML = `❌ Not quite. The correct answer is: <strong>${correct}</strong>.`;
                 result.style.color = '#c62828';
             }
         });
