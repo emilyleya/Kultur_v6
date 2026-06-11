@@ -431,6 +431,8 @@ function renderExploreList() {
 
         const btn   = document.createElement('button');
         btn.className = 'site-item';
+        btn.style.color = dotColor; // WECHSEL: Der gesamte Eintrag teilt dem Stern seine Farbe mit
+        btn.className = 'site-item';
         btn.innerHTML = `
             <span class="site-dot" style="color: ${dotColor}">●</span>
             <div class="site-body">
@@ -469,6 +471,8 @@ function renderFavList() {
         if (era === 'modern')   dotColor = '#fbbf69';
 
         const item = document.createElement('button');
+        item.className = 'site-item';
+        item.style.color = dotColor; // WECHSEL: Auch in den Favoriten erbt der Stern die Farbe
         item.className = 'site-item';
         item.innerHTML = `
             <span class="site-dot" style="color: ${dotColor}">●</span>
