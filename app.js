@@ -507,6 +507,26 @@ function parseCoord(val) {
 function getSiteId(site) {
     return site.id_no ?? site.unique_number ?? null;
 }
+function getSiteEra(site) {
+    const text = ((site.short_description_en || "") + " " + (site.site || "")).toLowerCase();
+    
+    if (text.includes("ancient") || text.includes("bc") || text.includes("roman empire") || text.includes("greek")) {
+        return "ancient";
+    }
+    if (text.includes("medieval") || text.includes("monastery") || text.includes("century castle") || text.includes("dynasty")) {
+        return "medieval";
+    }
+    return "modern";
+}
+
+function isWorldWonder(site) {
+    const id = getSiteId(site);
+    const text = ((site.site || site.name_en || "") + " " + (site.short_description_en || "")).toLowerCase();
+    
+    // Erkennt bekannte Weltwunder über Beispiel-IDs oder Texttreffer
+    const wonderIds = [162, 252, 624, 483]; 
+    return wonderIds.includes(id) || text.includes("wonder of the world") || text.includes("seven wonders");
+}
 
 // ── START ─────────────────────────────────────
 loadSites();
