@@ -695,12 +695,12 @@ body.dark .quiz-wrong {
     background: #852e24 !important;
     border-color: #852e24 !important;
 }
-/* Aktiviert / Ausgewählt (Leicht helleres Rotbraun) */
+/* Aktiviert / Ausgewählt (Hellere Farbe + JETZT MIT DUNKLER SCHRIFT) */
 .filter-btn.btn-ancient.active {
     background: #a8544a !important;
     border-color: #a8544a !important;
-    color: #ffffff !important;
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4); /* Subtiler Innenrahmen für bessere Erkennbarkeit */
+    color: #3E3530 !important; /* Dunkle Schrift für perfekten Kontrast */
+    box-shadow: inset 0 0 0 2px rgba(62, 53, 48, 0.2); 
 }
 
 /* --- 2. MITTELALTER --- */
@@ -714,12 +714,12 @@ body.dark .quiz-wrong {
     background: #e37134 !important;
     border-color: #e37134 !important;
 }
-/* Aktiviert / Ausgewählt (Leicht helleres Orange) */
+/* Aktiviert / Ausgewählt (Hellere Farbe + JETZT MIT DUNKLER SCHRIFT) */
 .filter-btn.btn-medieval.active {
     background: #e69367 !important;
     border-color: #e69367 !important;
-    color: #ffffff !important;
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4);
+    color: #3E3530 !important; /* Dunkle Schrift für perfekten Kontrast */
+    box-shadow: inset 0 0 0 2px rgba(62, 53, 48, 0.2);
 }
 
 /* --- 3. NEUZEIT --- */
@@ -727,16 +727,16 @@ body.dark .quiz-wrong {
 .filter-btn.btn-modern {
     background: #fbbf69 !important;
     border-color: #fbbf69 !important;
-    color: #ffffff !important; /* Dunkler Text für Lesbarkeit */
+    color: #3E3530 !important; 
 }
 .filter-btn.btn-modern:hover {
     background: #fccb83 !important;
     border-color: #fccb83 !important;
 }
-/* Aktiviert / Ausgewählt (Leicht helleres Pastellgelb) */
+/* Aktiviert / Ausgewählt (Hellere Farbe + Dunkle Schrift) */
 .filter-btn.btn-modern.active {
     background: #fcd49a !important;
     border-color: #fcd49a !important;
-    color: #3E3530 !important;
-    box-shadow: inset 0 0 0 2px rgba(62, 53, 48, 0.2); /* Dunkler Innenrahmen für den Kontrast */
+    color: #3E3530 !important; /* Bleibt dunkel, passend zum hellen Gelb */
+    box-shadow: inset 0 0 0 2px rgba(62, 53, 48, 0.2); 
 }
