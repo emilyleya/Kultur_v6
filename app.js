@@ -352,15 +352,13 @@ async function showDetails(site, coords) {
 
     const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
     
+   const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
+    
+    // TAB 1: Nur die Text-Inhalte (UNESCO & Wikipedia)
     document.getElementById('detail-description').innerHTML = `
         <div class="content-block">
             <div class="content-label">UNESCO Beschreibung</div>
             <p class="content-text">${dbDescription}</p>
-        </div>
-        <div class="content-block" style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px;">
-            <div class="content-label">Geografische Daten</div>
-            <p class="content-text"><strong>Fläche:</strong> ${site.area_hectares || '–'} Hektar</p>
-            <p class="content-text"><strong>Region:</strong> ${site.region_en || '–'}</p>
         </div>
         <div class="content-block" id="wiki-extended-block" style="display:none">
             <div class="content-label">Erweiterte Informationen (Wikipedia)</div>
@@ -369,16 +367,16 @@ async function showDetails(site, coords) {
         <div id="quiz-placeholder"></div>
     `;
 
+    // TAB 2: Hier kommen die Geodaten (ohne Kriterien) exklusiv rein
     const geoEl = document.getElementById('detail-geodata');
-    if (geoEl) geoEl.innerHTML = '';
-
-    document.getElementById('panel-welcome').classList.remove('active');
-    document.getElementById('panel-details').classList.add('active');
-
-    const slideshowEl = document.getElementById('slideshow');
-    if (slideshowEl) {
-        slideshowEl.innerHTML = `<div class="slide-loading">Bilder werden geladen…</div>`;
-        fetchSlideshow(siteName).then(urls => renderSlideshow(urls));
+    if (geoEl) {
+        geoEl.innerHTML = `
+            <div class="content-block">
+                <div class="content-label">Geografische Daten</div>
+                <p class="content-text"><strong>Fläche:</strong> ${site.area_hectares || '–'} Hektar</p>
+                <p class="content-text"><strong>Region:</strong> ${site.region_en || '–'}</p>
+            </div>
+        `;
     }
 
     fetchWikipediaSummary(siteName).then(wikiText => {
