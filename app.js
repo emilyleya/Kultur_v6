@@ -543,11 +543,11 @@ function bindEvents() {
             document.getElementById(e.currentTarget.dataset.tab).classList.add('active');
         });
     });
-// Filter-Chips Event Listener
-    document.querySelectorAll('.chip').forEach(chip => {
-        chip.addEventListener('click', e => {
+// Filter-Buttons Event Listener
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
             // Aktiven Zustand bei den Knöpfen wechseln
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
             
             // Filterwerte auslesen
@@ -558,7 +558,6 @@ function bindEvents() {
             applyFiltering();
         });
     });
-}
 
 // ── 13. HELPERS ───────────────────────────────
 function parseCoord(val) {
