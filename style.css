@@ -113,7 +113,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .sidebar {
-    position: absolute;
+    position: absolute; /* WICHTIG: Muss absolut sein, sonst wird die Karte weggedrückt! */
     top: 84px; left: 12px; bottom: 12px;
     width: 580px;
     z-index: 10;
