@@ -333,7 +333,6 @@ function bindQuizEvents() {
 }
 
 // ── 8. DETAILS ────────────────────────────────
-// ── 8. DETAILS ────────────────────────────────
 async function showDetails(site, coords) {
     activeSite = site;
     
@@ -353,7 +352,7 @@ async function showDetails(site, coords) {
 
     const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
     
-    // TAB 1: Nur die Text-Inhalte (UNESCO & Wikipedia)
+    // TAB 1: NUR die reinen Texte (UNESCO, Wikipedia) & das Quiz – KEINE Geodaten mehr hier!
     document.getElementById('detail-description').innerHTML = `
         <div class="content-block">
             <div class="content-label">UNESCO Beschreibung</div>
@@ -366,12 +365,12 @@ async function showDetails(site, coords) {
         <div id="quiz-placeholder"></div>
     `;
 
-    // TAB 2: Hier kommen die Geodaten exklusiv rein
+    // TAB 2: Hier kommen die Geodaten jetzt exklusiv und sauber isoliert rein
     const geoEl = document.getElementById('detail-geodata');
     if (geoEl) {
         geoEl.innerHTML = `
             <div class="content-block">
-                <div class="content-label">geografic data</div>
+                <div class="content-label">Geografische Daten</div>
                 <p class="content-text"><strong>Fläche:</strong> ${site.area_hectares || '–'} Hektar</p>
                 <p class="content-text"><strong>Region:</strong> ${site.region_en || '–'}</p>
             </div>
