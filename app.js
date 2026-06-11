@@ -159,6 +159,36 @@ function renderSlideshow(urls) {
     render();
 }
 
+// Ergänzung am Ende von Abschnitt 6: Wikipedia-Text laden
+async function fetchWikipediaSummary(siteName) {
+    try {
+        // Nutzt die TextExtracts API von Wikipedia für sauberen Plaintext (nur Intro)
+        const url = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(siteName)}&format=json&origin=*`;
+        let res = await fetch(url);
+        let data = await res.json();
+        let page = Object.values(data.query.pages)[0];
+        
+        // Stufe 2: Falls unter dem exakten Namen nichts gefunden wurde, über die Suche probieren
+        if (!page || page.missing !== undefined) {
+            const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(siteName)}&srlimit=1&format=json&origin=*`;
+            const searchRes = await fetch(searchUrl);
+            const searchData = await searchRes.json();
+            const title = searchData.query?.search?.[0]?.title;
+            
+            if (title) {
+                const retryUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(title)}&format=json&origin=*`;
+                res = await fetch(retryUrl);
+                data = await res.json();
+                page = Object.values(data.query.pages)[0];
+            }
+        }
+        
+        return page?.extract || null;
+    } catch {
+        return null;
+    }
+}
+
 // ── 7. QUIZ ───────────────────────────────────
 function buildQuiz(site) {
     const correctYear = parseInt(site.date_inscribed);
