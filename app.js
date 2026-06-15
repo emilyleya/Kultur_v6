@@ -682,38 +682,23 @@ function getSiteEra(site) {
 function isWorldWonder(site) {
     if (!site) return false;
 
-    // 1. Namen für die Textsuche komplett in Kleinbuchstaben umwandeln
-    const name = (site.site || site.name_en || "").toLowerCase();
-    
-    // 2. Alle denkbaren ID-Spalten aus Supabase als Text sichern
-    const idNo     = String(site.id_no || "");
-    const uniqNo   = String(site.unique_number || "");
-    const simpleId = String(site.id || "");
+    // 1. Wir holen uns den Namen der Stätte und vereinheitlichen ihn (Kleinbuchstaben & ohne HTML-Reste)
+    const name = (site.site || site.name_en || "")
+        .toLowerCase()
+        .replace(/<[^>]*>/g, '') // Entfernt eventuelle HTML-Tags wie <em> aus dem Namen
+        .trim();
 
-    // 3. LÜCKENLOSER ID-CHECK (Prüft die exakten UNESCO-Nummern)
-    const hasMatchId = (
-        idNo     === "91"  || uniqNo === "91"  || simpleId === "91"  || // Kolosseum (Rom)
-        idNo     === "274" || uniqNo === "274" || simpleId === "274" || // Machu Picchu
-        idNo     === "252" || uniqNo === "252" || simpleId === "252" || // Taj Mahal
-        idNo     === "438" || uniqNo === "438" || simpleId === "438" || // Chinesische Mauer (Great Wall)
-        idNo     === "326" || uniqNo === "326" || simpleId === "326" || // Petra
-        idNo     === "183" || uniqNo === "183" || simpleId === "183" || // Chichén Itzá
-        idNo     === "1533"|| uniqNo === "1533"|| simpleId === "1533"   // Rio (Christ Redeemer Fallback)
-    );
+    // 2. Lückenlose Namensliste aller 7 Weltwunder (inkl. deutscher & englischer Wikipedia-Begriffe)
+    const isGreatWall   = name.includes("great wall") || name.includes("chinesische mauer");
+    const isPetra       = name.includes("petra");
+    const isChrist      = name.includes("rio de janeiro") || name.includes("corcovado") || name.includes("christ the redeemer") || name.includes("cristo redentor");
+    const isMachuPicchu = name.includes("machu") || name.includes("picchu");
+    const isChichenItza = name.includes("chichen") || name.includes("itzá") || name.includes("itza");
+    const isColosseum   = name.includes("colosseum") || name.includes("colloseum") || name.includes("colosseo") || name.includes("rome") || name.includes("rom");
+    const isTajMahal    = name.includes("taj mahal");
 
-    // Wenn eine der IDs übereinstimmt, ist es sofort ein Weltwunder!
-    if (hasMatchId) return true;
-
-    // 4. LÜCKENLOSER NAMENS-CHECK (Falls die IDs in der Datenbank verschoben sind)
-    return name.includes("taj mahal") || 
-           name.includes("machu") || 
-           name.includes("colosseum") || 
-           name.includes("colloseum") || 
-           name.includes("rome") || 
-           name.includes("great wall") || 
-           name.includes("petra") || 
-           name.includes("chichen") || 
-           name.includes("rio de janeiro");
+    // 3. Wenn irgendein Begriff matcht, verwandelt JavaScript den Punkt sofort in einen goldenen Stern!
+    return isGreatWall || isPetra || isChrist || isMachuPicchu || isChichenItza || isColosseum || isTajMahal;
 }
 
 // ── START ─────────────────────────────────────
