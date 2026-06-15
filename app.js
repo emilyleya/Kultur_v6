@@ -762,14 +762,11 @@ function getSiteId(site) {
 }
 
 function getSiteEra(site) {
-    const text = ((site.short_description_en || "") + " " + (site.site || "")).toLowerCase();
-    if (text.includes("ancient") || text.includes("bc") || text.includes("roman empire") || text.includes("greek")) {
-        return "ancient";
-    }
-    if (text.includes("medieval") || text.includes("monastery") || text.includes("century castle") || text.includes("dynasty")) {
-        return "medieval";
-    }
-    return "modern";
+    const year = parseInt(site.date_inscribed);
+    if (!year) return 'modern';
+    if (year < 500)  return 'ancient';
+    if (year < 1500) return 'medieval';
+    return 'modern';
 }
 
 // ── START ─────────────────────────────────────
