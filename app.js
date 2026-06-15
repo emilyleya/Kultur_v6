@@ -158,7 +158,7 @@ function getFilteredSites() {
 
 function applyFiltering() {
     updateMarkers(); // KORREKTUR: updateMarkers statt addMarkers aufrufen!
-    renderExploreList();
+    ExploreList();
 }
 
 // ── 8. WIKIPEDIA SLIDESHOW & TEXT ─────────────
@@ -441,51 +441,33 @@ function renderExploreList() {
     const container = document.getElementById('view-explore');
     if (!container) return;
     container.innerHTML = '';
-
-    const wonderSites = WORLD_WONDERS.map(w => ({
-        site: w.name,
-        states_name_en: 'World Wonder',
-        category: 'New Seven Wonders',
-        date_inscribed: null,
-        latitude: w.lat,
-        longitude: w.lng,
-        short_description_en: '',
-        region_en: '',
-        area_hectares: '',
-        criteria_txt: '',
-        id_no: 'wonder_' + w.name.replace(/\s+/g, '_')
-    }));
-
-    let displayList = [];
-    if (activeFilters.type === 'wonder') {
-        displayList = wonderSites;
-    } else if (activeFilters.type === 'heritage') {
-        displayList = getFilteredSites().slice(0, 150);
-    } else {
-        displayList = getFilteredSites().slice(0, 150);
-    }
-
-    displayList.forEach(site => {
+    
+    const displayList = getFilteredSites();
+    displayList.slice(0, 150).forEach(site => {
         const id    = getSiteId(site);
         const isFav = favorites.includes(id);
-        const isWonder = site.category === 'New Seven Wonders';
+        
+        // Ermittle die Epoche für die Farbe des Listen-Dots
+        const era = getSiteEra(site);
+        let dotColor = '#FF8C42'; // Fallback (Orange)
+        
+        // SYNCHRONISATION mit den Farben der Karte und deiner style.css
+        if (era === 'ancient')  dotColor = '#6a241c'; // Dunkles Rotbraun
+        if (era === 'medieval') dotColor = '#cf6229'; // Sattes Orange
+        if (era === 'modern')   dotColor = '#fbbf69'; // Ockergelb
 
-        const dotColor = isWonder ? '#8B5E3C' : (() => {
-            const era = getSiteEra(site);
-            if (era === 'ancient')  return '#4EA8DE';
-            if (era === 'medieval') return '#9D4EDD';
-            return '#72EFDD';
-        })();
-
-        const btn = document.createElement('button');
+        const btn   = document.createElement('button');
         btn.className = 'site-item';
+        
+        // Wir setzen nur die Farbe für den Dot dynamisch, nicht für das ganze Element,
+        // damit der Text lesbar und clean bleibt.
         btn.innerHTML = `
-            <span class="site-dot" style="color:${dotColor}">${isWonder ? '★' : '●'}</span>
+            <span class="site-dot" style="color: ${dotColor}">●</span>
             <div class="site-body">
                 <div class="site-name">${site.site || site.name_en || 'Unbekannte Stätte'}</div>
-                <div class="site-meta">${site.states_name_en || 'Weltweit'}${site.date_inscribed ? ' · ' + site.date_inscribed : ''}</div>
+                <div class="site-meta">${site.states_name_en || 'Weltweit'} · ${site.date_inscribed || '–'}</div>
             </div>
-            <button class="site-fav" data-id="${id}">${isFav ? '★' : '☆'}</button>
+            <button class="site-fav" data-id="${id}" style="color: ${dotColor}">${isFav ? '★' : '☆'}</button>
         `;
         btn.addEventListener('click', e => {
             if (e.target.closest('.site-fav')) { toggleFav(id); return; }
