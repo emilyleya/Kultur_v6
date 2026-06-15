@@ -117,13 +117,66 @@ function getSiteEra(site) {
     return 'modern';
 }
 
+// ── 5. MARKERS & FILTER LOGIC ─────────────────
+const WORLD_WONDERS = [
+    {
+        name: "Great Wall of China",
+        lat: 40.4319,
+        lng: 116.5704
+    },
+    {
+        name: "Petra",
+        lat: 30.3285,
+        lng: 35.4444
+    },
+    {
+        name: "Christ the Redeemer",
+        lat: -22.9519,
+        lng: -43.2105
+    },
+    {
+        name: "Machu Picchu",
+        lat: -13.1631,
+        lng: -72.5450
+    },
+    {
+        name: "Chichen Itza",
+        lat: 20.6843,
+        lng: -88.5678
+    },
+    {
+        name: "Colosseum",
+        lat: 41.8902,
+        lng: 12.4922
+    },
+    {
+        name: "Taj Mahal",
+        lat: 27.1751,
+        lng: 78.0421
+    }
+];
+
+// ── Hilfsfunktionen ───────────────────────────
+function isWorldWonder(site) {
+    const name = (site.site || site.name_en || '').toLowerCase();
+    // Prüft, ob der Name der Stätte eines der Weltwunder aus unserer Liste oben enthält
+    return WORLD_WONDERS.some(w => name.includes(w.name.toLowerCase()));
+}
+
+function getSiteEra(site) {
+    const text = ((site.short_description_en || '') + ' ' + (site.site || '') + ' ' + (site.justification_en || '')).toLowerCase();
+    if (text.includes(' bc') || text.includes('ancient') || text.includes('roman empire') || text.includes('greek') || text.includes('prehistoric') || text.includes('neolithic') || text.includes('bronze age') || text.includes('iron age') || text.includes('pharaoh') || text.includes('mesopotamia') || text.includes('classical antiquity')) return 'ancient';
+    if (text.includes('medieval') || text.includes('middle ages') || text.includes('monastery') || text.includes('gothic') || text.includes('byzantine') || text.includes('ottoman') || text.includes('dynasty') || text.includes('feudal') || text.includes('crusader') || text.includes('romanesque') || text.includes('renaissance') || text.includes('baroque')) return 'medieval';
+    return 'modern';
+}
+
 // ── 5. MARKERS ────────────────────────────────
 function updateMarkers() {
     if (!map) return;
 
-    // Old markers cleanup
-    markers.forEach(m => m.remove());
-    markers = [];
+    // KORREKTUR: Nutzt jetzt mapMarkers (wie in Zeile 24 definiert) statt markers!
+    mapMarkers.forEach(m => m.remove());
+    mapMarkers = [];
 
     const searchVal = document.getElementById('search-input')?.value.toLowerCase() || "";
     const activeCat = document.querySelector('.filter-btn.active')?.dataset.category || "all";
@@ -138,6 +191,7 @@ function updateMarkers() {
     });
 
     filtered.forEach(site => {
+        // Nutzt wieder deinen funktionierenden Original-Aufruf
         const lat = parseCoord(site.latitude);
         const lng = parseCoord(site.longitude);
         if (!lat || !lng) return;
@@ -148,7 +202,6 @@ function updateMarkers() {
         if (isWorldWonder(site)) {
             color = '#FFD700'; // Weltwunder funkeln in GOLD
         } else {
-            // Nutzen der unten in deiner Datei definierten Funktion getSiteEra()
             const era = getSiteEra(site); 
             if (era === 'ancient') {
                 color = '#4EA8DE'; // Antike -> Blau
@@ -168,32 +221,9 @@ function updateMarkers() {
             fillOpacity: 0.85
         }).addTo(map);
 
-        marker.on('click', () => showDetails(site));
-        markers.push(marker);
+        marker.on('click', () => showDetails(site, [lat, lng]));
+        mapMarkers.push(marker);
     });
-}
-function getFilteredSites() {
-    return sites.filter(site => {
-        if (activeFilters.type !== 'all') {
-            const isWonder = isWorldWonder(site);
-            if (activeFilters.type === 'wonder' && !isWonder) return false;
-            if (activeFilters.type === 'heritage' && isWonder) return false;
-        }
-        if (activeFilters.era !== 'all') {
-            if (getSiteEra(site) !== activeFilters.era) return false;
-        }
-        if (activeFilters.region !== 'all') {
-            const siteRegion = String(site.region_en || site.region || '').toLowerCase();
-            const filterRegion = String(activeFilters.region).toLowerCase();
-            if (!siteRegion.includes(filterRegion)) return false;
-        }
-        return true;
-    });
-}
-
-function applyFiltering() {
-    addMarkers();
-    renderExploreList();
 }
 
 // ── 6. WIKIPEDIA SLIDESHOW & TEXT ─────────────
