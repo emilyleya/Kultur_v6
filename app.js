@@ -508,8 +508,8 @@ function renderExploreList() {
         displayList = wonderSites;
     } else if (activeFilters.type === 'heritage') {
         displayList = getFilteredSites().slice(0, 150);
-    } else {
-        displayList = [...wonderSites, ...getFilteredSites().slice(0, 150)];
+   } else {
+        displayList = getFilteredSites().slice(0, 150);
     }
 
     displayList.forEach(site => {
