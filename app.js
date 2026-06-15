@@ -486,28 +486,51 @@ function renderExploreList() {
     const container = document.getElementById('view-explore');
     if (!container) return;
     container.innerHTML = '';
-    
-    const displayList = getFilteredSites();
-    displayList.slice(0, 150).forEach(site => {
+
+    // Weltwunder als synthetische Sites zusammenbauen
+    const wonderSites = WORLD_WONDERS.map(w => ({
+        site: w.name,
+        states_name_en: 'World Wonder',
+        category: 'New Seven Wonders',
+        date_inscribed: null,
+        latitude: w.lat,
+        longitude: w.lng,
+        short_description_en: '',
+        region_en: '',
+        area_hectares: '',
+        criteria_txt: '',
+        id_no: 'wonder_' + w.name.replace(/\s+/g, '_')
+    }));
+
+    // Je nach Filter: Weltwunder, Heritage Sites oder beides
+    let displayList = [];
+    if (activeFilters.type === 'wonder') {
+        displayList = wonderSites;
+    } else if (activeFilters.type === 'heritage') {
+        displayList = getFilteredSites().slice(0, 150);
+    } else {
+        displayList = [...wonderSites, ...getFilteredSites().slice(0, 150)];
+    }
+
+    displayList.forEach(site => {
         const id    = getSiteId(site);
         const isFav = favorites.includes(id);
-        
-        // Ermittle die Epoche für die dynamische Farbe des Listen-Dots
-        const era = getSiteEra(site);
-        let dotColor = '#FF8C42'; // Fallback
-        if (era === 'ancient')  dotColor = '#6a241c';
-        if (era === 'medieval') dotColor = '#cf6229';
-        if (era === 'modern')   dotColor = '#fbbf69';
+        const isWonder = site.category === 'New Seven Wonders';
 
-        const btn   = document.createElement('button');
-        btn.className = 'site-item';
-        btn.style.color = dotColor; // WECHSEL: Der gesamte Eintrag teilt dem Stern seine Farbe mit
+        const dotColor = isWonder ? '#8B5E3C' : (() => {
+            const era = getSiteEra(site);
+            if (era === 'ancient')  return '#6a241c';
+            if (era === 'medieval') return '#cf6229';
+            return '#fbbf69';
+        })();
+
+        const btn = document.createElement('button');
         btn.className = 'site-item';
         btn.innerHTML = `
-            <span class="site-dot" style="color: ${dotColor}">●</span>
+            <span class="site-dot" style="color:${dotColor}">${isWonder ? '★' : '●'}</span>
             <div class="site-body">
                 <div class="site-name">${site.site || site.name_en || 'Unbekannte Stätte'}</div>
-                <div class="site-meta">${site.states_name_en || 'Weltweit'} · ${site.date_inscribed || '–'}</div>
+                <div class="site-meta">${site.states_name_en || 'Weltweit'}${site.date_inscribed ? ' · ' + site.date_inscribed : ''}</div>
             </div>
             <button class="site-fav" data-id="${id}">${isFav ? '★' : '☆'}</button>
         `;
