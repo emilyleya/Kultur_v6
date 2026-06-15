@@ -138,6 +138,48 @@ function addMarkers() {
             });
         }
 
+        WORLD_WONDERS.forEach(wonder => {
+
+    const icon = L.divIcon({
+        className: 'wonder-marker',
+        html: `
+            <div class="wonder-wrap">
+                <div class="wonder-star-glyph">★</div>
+            </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+
+    const marker = L.marker(
+        [wonder.lat, wonder.lng],
+        { icon }
+    ).addTo(map);
+
+    marker.on('click', () => {
+
+        document.getElementById('detail-title').textContent =
+            wonder.name;
+
+        document.getElementById('detail-country').textContent =
+            'World Wonder';
+
+        document.getElementById('detail-category').textContent =
+            'New Seven Wonders';
+
+        document.getElementById('detail-meta').textContent =
+            '';
+
+        document.getElementById('panel-welcome')
+            .classList.remove('active');
+
+        document.getElementById('panel-details')
+            .classList.add('active');
+    });
+
+    mapMarkers.push(marker);
+});
+        
         const marker = L.marker([lat, lng], { icon })
             .addTo(map)
             .on('click', () => showDetails(site, [lat, lng]));
