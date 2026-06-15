@@ -686,7 +686,8 @@ function isWorldWonder(site) {
            name.includes("rio de janeiro") ||      
            name.includes("machu picchu") ||        
            name.includes("chichen") ||             
-           name.includes("colosseum") ||           
+           name.includes("colosseum") ||  
+           name.includes("colloseo") ||
            name.includes("taj mahal");             
 }
 
