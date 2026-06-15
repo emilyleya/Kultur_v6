@@ -688,7 +688,7 @@ function isWorldWonder(site) {
            name.includes("chichen") ||             
            name.includes("colosseum") ||  
            name.includes("colloseo") ||
-           name.includes("colloseum")
+           name.includes("colloseum") ||
            name.includes("taj mahal");             
 }
 
