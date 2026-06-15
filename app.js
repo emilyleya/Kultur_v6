@@ -94,53 +94,45 @@ function getSiteEra(site) {
 function updateMarkers() {
     if (!map) return;
 
-    // KORREKTUR: Nutzt jetzt mapMarkers wie global definiert
-    mapMarkers.forEach(m => m.remove());
+    // Vorherige Marker von der Karte entfernen
+    mapMarkers.forEach(m => map.removeLayer(m));
     mapMarkers = [];
 
-    const searchVal = document.getElementById('search-input')?.value.toLowerCase() || "";
-    const activeCat = document.querySelector('.filter-btn.active')?.dataset.category || "all";
+    const filteredSites = getFilteredSites();
 
-    const filtered = sites.filter(site => {
-        const matchesSearch = (site.site || "").toLowerCase().includes(searchVal) ||
-                              (site.states_name_en || "").toLowerCase().includes(searchVal);
-        
-        if (activeCat === "all") return matchesSearch;
-        if (activeCat === "wonder") return matchesSearch && isWorldWonder(site);
-        return matchesSearch && (site.category || "").toLowerCase() === activeCat.toLowerCase();
-    });
-
-    filtered.forEach(site => {
+    filteredSites.forEach(site => {
         const lat = parseCoord(site.latitude);
         const lng = parseCoord(site.longitude);
-        if (!lat || !lng) return;
+        if (lat === null || lng === null) return;
 
-        // ── Epochen-Farblogik ──
-        let color = '#FF8C42'; 
-
+        let icon;
         if (isWorldWonder(site)) {
-            color = '#FFD700'; // Weltwunder in Gold
+            icon = L.divIcon({
+                className: 'wonder-marker',
+                html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
+                iconSize: [24, 24], iconAnchor: [12, 12]
+            });
         } else {
-            const era = getSiteEra(site); 
-            if (era === 'ancient') {
-                color = '#4EA8DE'; // Antike -> Blau
-            } else if (era === 'medieval') {
-                color = '#9D4EDD'; // Mittelalter -> Lila
-            } else if (era === 'modern') {
-                color = '#72EFDD'; // Moderne -> Türkis
-            }
+            // Ermittle die Epoche für die dynamische Farbe des Punktes
+            const era = getSiteEra(site);
+            let markerColor = '#FF8C42'; // Standard-Fallback (Orange)
+            
+            // KORREKTUR: Synchronisation mit den echten Farben aus deiner style.css!
+            if (era === 'ancient')  markerColor = '#6a241c'; // Dunkles Rotbraun (Antike)
+            if (era === 'medieval') markerColor = '#cf6229'; // Sattes Orange (Mittelalter)
+            if (era === 'modern')   markerColor = '#fbbf69'; // Ockergelb (Neuzeit)
+
+            icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div class="marker-wrap"><div class="marker-core" style="background:${markerColor}"></div></div>`,
+                iconSize: [14, 14], iconAnchor: [7, 7]
+            });
         }
 
-        const marker = L.circleMarker([lat, lng], {
-            radius: isWorldWonder(site) ? 8 : 5,
-            fillColor: color,
-            color: '#FFFFFF',
-            weight: isWorldWonder(site) ? 2 : 1,
-            opacity: 1,
-            fillOpacity: 0.95
-        }).addTo(map);
-
-        marker.on('click', () => showDetails(site, [lat, lng]));
+        const marker = L.marker([lat, lng], { icon })
+            .addTo(map)
+            .on('click', () => showDetails(site, [lat, lng]));
+            
         mapMarkers.push(marker);
     });
 }
