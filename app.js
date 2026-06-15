@@ -111,10 +111,9 @@ function isWorldWonder(site) {
 }
 
 function getSiteEra(site) {
-    const year = parseInt(site.date_inscribed);
-    if (!year) return 'all';
-    if (year < 500)  return 'ancient';
-    if (year < 1500) return 'medieval';
+    const text = ((site.short_description_en || '') + ' ' + (site.site || '')).toLowerCase();
+    if (text.includes('ancient') || text.includes(' bc') || text.includes('roman') || text.includes('greek') || text.includes('prehistoric') || text.includes('neolithic')) return 'ancient';
+    if (text.includes('medieval') || text.includes('monastery') || text.includes('gothic') || text.includes('byzantine') || text.includes('ottoman') || text.includes('dynasty')) return 'medieval';
     return 'modern';
 }
 
