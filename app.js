@@ -104,41 +104,8 @@ const WORLD_WONDERS = [
     }
 ];
 
-function addMarkers() {
-    mapMarkers.forEach(m => map.removeLayer(m));
-    mapMarkers = [];
-
-    const filteredSites = getFilteredSites();
-
-    filteredSites.forEach(site => {
-        const lat = parseCoord(site.latitude);
-        const lng = parseCoord(site.longitude);
-        if (lat === null || lng === null) return;
-
-        let icon;
-        if (isWorldWonder(site)) {
-            icon = L.divIcon({
-                className: 'wonder-marker',
-                html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
-                iconSize: [24, 24], iconAnchor: [12, 12]
-            });
-        } else {
-            // Ermittle die Epoche für die dynamische Farbe des Punktes
-            const era = getSiteEra(site);
-            let markerColor = '#FF8C42'; // Fallback-Farbe
-            
-            if (era === 'ancient')  markerColor = '#6a241c';
-            if (era === 'medieval') markerColor = '#cf6229';
-            if (era === 'modern')   markerColor = '#fbbf69';
-
-            icon = L.divIcon({
-                className: 'custom-marker',
-                html: `<div class="marker-wrap"><div class="marker-core" style="background:${markerColor}"></div></div>`,
-                iconSize: [14, 14], iconAnchor: [7, 7]
-            });
-        }
-
-         function isWorldWonder(site) {
+// ── Hilfsfunktionen ───────────────────────────
+function isWorldWonder(site) {
     const name = (site.site || site.name_en || '').toLowerCase();
     return WORLD_WONDERS.some(w => w.name.toLowerCase() === name);
 }
@@ -150,42 +117,63 @@ function getSiteEra(site) {
     if (year < 1500) return 'medieval';
     return 'modern';
 }
-        
-// Weltwunder werden als synthetische Site-Objekte behandelt
-// damit showDetails() mit Bildern/Quiz/Tour funktioniert
-WORLD_WONDERS.forEach(wonder => {
-    const wonderSite = {
-        site: wonder.name,
-        states_name_en: 'World Wonder',
-        category: 'New Seven Wonders',
-        date_inscribed: null,
-        latitude: wonder.lat,
-        longitude: wonder.lng,
-        short_description_en: '',
-        region_en: '',
-        area_hectares: '',
-        criteria_txt: '',
-        id_no: 'wonder_' + wonder.name.replace(/\s+/g, '_')
-    };
 
-    const icon = L.divIcon({
-        className: 'wonder-marker',
-        html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+// ── 5. MARKERS ────────────────────────────────
+function addMarkers() {
+    mapMarkers.forEach(m => map.removeLayer(m));
+    mapMarkers = [];
+
+    // Weltwunder-Marker
+    WORLD_WONDERS.forEach(wonder => {
+        const wonderSite = {
+            site: wonder.name,
+            states_name_en: 'World Wonder',
+            category: 'New Seven Wonders',
+            date_inscribed: null,
+            latitude: wonder.lat,
+            longitude: wonder.lng,
+            short_description_en: '',
+            region_en: '',
+            area_hectares: '',
+            criteria_txt: '',
+            id_no: 'wonder_' + wonder.name.replace(/\s+/g, '_')
+        };
+
+        const icon = L.divIcon({
+            className: 'wonder-marker',
+            html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
+            iconSize: [24, 24], iconAnchor: [12, 12]
+        });
+
+        const marker = L.marker([wonder.lat, wonder.lng], { icon })
+            .addTo(map)
+            .on('click', () => showDetails(wonderSite, [wonder.lat, wonder.lng]));
+
+        mapMarkers.push(marker);
     });
 
-    const marker = L.marker([wonder.lat, wonder.lng], { icon })
-        .addTo(map)
-        .on('click', () => showDetails(wonderSite, [wonder.lat, wonder.lng]));
+    // UNESCO-Stätten-Marker
+    getFilteredSites().forEach(site => {
+        const lat = parseCoord(site.latitude);
+        const lng = parseCoord(site.longitude);
+        if (lat === null || lng === null) return;
 
-    mapMarkers.push(marker);
-});
-       
+        const era = getSiteEra(site);
+        let markerColor = '#FF8C42';
+        if (era === 'ancient')  markerColor = '#6a241c';
+        if (era === 'medieval') markerColor = '#cf6229';
+        if (era === 'modern')   markerColor = '#fbbf69';
+
+        const icon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div class="marker-wrap"><div class="marker-core" style="background:${markerColor}"></div></div>`,
+            iconSize: [14, 14], iconAnchor: [7, 7]
+        });
+
         const marker = L.marker([lat, lng], { icon })
             .addTo(map)
             .on('click', () => showDetails(site, [lat, lng]));
-            
+
         mapMarkers.push(marker);
     });
 }
@@ -201,7 +189,7 @@ function getFilteredSites() {
             if (getSiteEra(site) !== activeFilters.era) return false;
         }
         if (activeFilters.region !== 'all') {
-            const siteRegion = String(site.region_en || site.region || "").toLowerCase();
+            const siteRegion = String(site.region_en || site.region || '').toLowerCase();
             const filterRegion = String(activeFilters.region).toLowerCase();
             if (!siteRegion.includes(filterRegion)) return false;
         }
