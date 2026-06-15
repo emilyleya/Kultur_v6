@@ -682,23 +682,38 @@ function getSiteEra(site) {
 function isWorldWonder(site) {
     if (!site) return false;
 
-    // 1. Wir holen uns den offiziellen Namen aus der UNESCO-Datenbank
-    const rawName = (site.site || site.name_en || "").toLowerCase();
+    const name = (site.site || site.name_en || "")
+        .toLowerCase()
+        .trim();
 
-    // 2. EXAKTER MATCH: Wir prüfen die Stätten anhand ihrer eindeutigen, echten Namen.
-    // Das verhindert, dass das gesamte historische Zentrum von Rom oder ganz Rio zum Weltwunder wird!
-    const isColosseum   = rawName.includes("colosseum") || rawName.includes("colloseum") || rawName.includes("flavian amphitheat");
-    const isTajMahal    = rawName.includes("taj mahal");
-    const isMachuPicchu = rawName.includes("machu picchu");
-    const isPetra       = rawName.includes("petra");
-    const isGreatWall   = rawName.includes("great wall");
-    const isChichenItza = rawName.includes("chichen itza") || rawName.includes("chichén itzá");
-    
-    // Für Rio suchen wir nach dem konkreten Monument-Eintrag, nicht nach der ganzen Stadt
-    const isChristRedeemer = rawName.includes("christ the redeemer") || rawName.includes("cristo redentor") || (rawName.includes("rio de janeiro") && rawName.includes("landscapes"));
+    const WORLD_WONDERS = [
+        "machu picchu",
+        "petra",
+        "taj mahal",
+        "chichen itza",
+        "chichén itzá",
+        "christ the redeemer",
+        "cristo redentor",
+        "colosseum",
+        "flavian amphitheatre",
+        "amphitheatrum flavium"
+    ];
 
-    // 3. Nur wenn einer dieser 7 exakten Treffer anschlägt, gibt es einen goldenen Stern!
-    return isColosseum || isTajMahal || isMachuPicchu || isPetra || isGreatWall || isChichenItza || isChristRedeemer;
+    // Exakter Treffer
+    if (WORLD_WONDERS.includes(name)) {
+        return true;
+    }
+
+    // Great Wall Sonderfall
+    if (
+        name === "great wall of china" ||
+        name === "the great wall" ||
+        name === "great wall"
+    ) {
+        return true;
+    }
+
+    return false;
 }
 
 // ── START ─────────────────────────────────────
