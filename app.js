@@ -65,45 +65,6 @@ function initMap() {
     tileLayer = L.tileLayer(TILE_LAYERS[theme], { maxZoom: 19, noWrap: true }).addTo(map);
 }
 
-// ── 5. MARKERS & FILTER LOGIC ─────────────────
-const WORLD_WONDERS = [
-    {
-        name: "Great Wall of China",
-        lat: 40.4319,
-        lng: 116.5704
-    },
-    {
-        name: "Petra",
-        lat: 30.3285,
-        lng: 35.4444
-    },
-    {
-        name: "Christ the Redeemer",
-        lat: -22.9519,
-        lng: -43.2105
-    },
-    {
-        name: "Machu Picchu",
-        lat: -13.1631,
-        lng: -72.5450
-    },
-    {
-        name: "Chichen Itza",
-        lat: 20.6843,
-        lng: -88.5678
-    },
-    {
-        name: "Colosseum",
-        lat: 41.8902,
-        lng: 12.4922
-    },
-    {
-        name: "Taj Mahal",
-        lat: 27.1751,
-        lng: 78.0421
-    }
-];
-
 // ── Hilfsfunktionen ───────────────────────────
 function isWorldWonder(site) {
     const name = (site.site || site.name_en || '').toLowerCase();
