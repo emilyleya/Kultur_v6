@@ -1,5 +1,5 @@
 // =============================================
-//  CHRONOS – app.js (KOMPLETT & REPARIERT)
+//  CHRONOS – app.js (KOMPLETT & STRUKTURIERT)
 // =============================================
 
 // ── 1. CONFIG ─────────────────────────────────
@@ -20,16 +20,26 @@ let activeSite  = null;
 let currentView = 'explore';
 let userXP      = parseInt(localStorage.getItem('chronos_xp'))    || 0;
 let favorites   = JSON.parse(localStorage.getItem('chronos_favs')) || [];
-let mapMarkers  = [];
+let mapMarkers  = []; // Globale Variable für die Marker auf der Karte
 
-// Kombinierte Filter Speicher
 let activeFilters = {
     type: 'all',
     era: 'all',
     region: 'all'
 };
 
-// ── 3. SUPABASE ───────────────────────────────
+// ── 3. WORLD WONDERS CONFIG (Muss VOR den Funktionen stehen!) ──
+const WORLD_WONDERS = [
+    { name: "Great Wall of China", lat: 40.4319, lng: 116.5704 },
+    { name: "Petra", lat: 30.3285, lng: 35.4444 },
+    { name: "Christ the Redeemer", lat: -22.9519, lng: -43.2105 },
+    { name: "Machu Picchu", lat: -13.1631, lng: -72.5450 },
+    { name: "Chichen Itza", lat: 20.6843, lng: -88.5678 },
+    { name: "Colosseum", lat: 41.8902, lng: 12.4922 },
+    { name: "Taj Mahal", lat: 27.1751, lng: 78.0421 }
+];
+
+// ── 4. SUPABASE ───────────────────────────────
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function loadSites() {
@@ -43,10 +53,10 @@ async function loadSites() {
     }
 }
 
-// ── 4. INIT ───────────────────────────────────
+// ── 5. INIT ───────────────────────────────────
 function initApp() {
     initMap();
-    addMarkers();
+    updateMarkers(); // KORREKTUR: updateMarkers statt addMarkers aufrufen!
     renderExploreList();
     renderFavList();
     updateXP();
@@ -65,77 +75,26 @@ function initMap() {
     tileLayer = L.tileLayer(TILE_LAYERS[theme], { maxZoom: 19, noWrap: true }).addTo(map);
 }
 
-// ── Hilfsfunktionen ───────────────────────────
+// ── 6. Hilfsfunktionen ───────────────────────────
 function isWorldWonder(site) {
+    if (!site) return false;
     const name = (site.site || site.name_en || '').toLowerCase();
-    return WORLD_WONDERS.some(w => w.name.toLowerCase() === name);
-}
-
-function getSiteEra(site) {
-    const text = ((site.short_description_en || '') + ' ' + (site.site || '') + ' ' + (site.justification_en || '')).toLowerCase();
-    if (text.includes(' bc') || text.includes('ancient') || text.includes('roman empire') || text.includes('greek') || text.includes('prehistoric') || text.includes('neolithic') || text.includes('bronze age') || text.includes('iron age') || text.includes('pharaoh') || text.includes('mesopotamia') || text.includes('classical antiquity')) return 'ancient';
-    if (text.includes('medieval') || text.includes('middle ages') || text.includes('monastery') || text.includes('gothic') || text.includes('byzantine') || text.includes('ottoman') || text.includes('dynasty') || text.includes('feudal') || text.includes('crusader') || text.includes('romanesque') || text.includes('renaissance') || text.includes('baroque')) return 'medieval';
-    return 'modern';
-}
-
-// ── 5. MARKERS & FILTER LOGIC ─────────────────
-const WORLD_WONDERS = [
-    {
-        name: "Great Wall of China",
-        lat: 40.4319,
-        lng: 116.5704
-    },
-    {
-        name: "Petra",
-        lat: 30.3285,
-        lng: 35.4444
-    },
-    {
-        name: "Christ the Redeemer",
-        lat: -22.9519,
-        lng: -43.2105
-    },
-    {
-        name: "Machu Picchu",
-        lat: -13.1631,
-        lng: -72.5450
-    },
-    {
-        name: "Chichen Itza",
-        lat: 20.6843,
-        lng: -88.5678
-    },
-    {
-        name: "Colosseum",
-        lat: 41.8902,
-        lng: 12.4922
-    },
-    {
-        name: "Taj Mahal",
-        lat: 27.1751,
-        lng: 78.0421
-    }
-];
-
-// ── Hilfsfunktionen ───────────────────────────
-function isWorldWonder(site) {
-    const name = (site.site || site.name_en || '').toLowerCase();
-    // Prüft, ob der Name der Stätte eines der Weltwunder aus unserer Liste oben enthält
     return WORLD_WONDERS.some(w => name.includes(w.name.toLowerCase()));
 }
 
 function getSiteEra(site) {
+    if (!site) return 'modern';
     const text = ((site.short_description_en || '') + ' ' + (site.site || '') + ' ' + (site.justification_en || '')).toLowerCase();
     if (text.includes(' bc') || text.includes('ancient') || text.includes('roman empire') || text.includes('greek') || text.includes('prehistoric') || text.includes('neolithic') || text.includes('bronze age') || text.includes('iron age') || text.includes('pharaoh') || text.includes('mesopotamia') || text.includes('classical antiquity')) return 'ancient';
     if (text.includes('medieval') || text.includes('middle ages') || text.includes('monastery') || text.includes('gothic') || text.includes('byzantine') || text.includes('ottoman') || text.includes('dynasty') || text.includes('feudal') || text.includes('crusader') || text.includes('romanesque') || text.includes('renaissance') || text.includes('baroque')) return 'medieval';
     return 'modern';
 }
 
-// ── 5. MARKERS ────────────────────────────────
+// ── 7. MARKERS & FILTER LOGIC ─────────────────
 function updateMarkers() {
     if (!map) return;
 
-    // Nutzt mapMarkers wie global definiert
+    // KORREKTUR: Nutzt jetzt mapMarkers wie global definiert
     mapMarkers.forEach(m => m.remove());
     mapMarkers = [];
 
@@ -156,11 +115,11 @@ function updateMarkers() {
         const lng = parseCoord(site.longitude);
         if (!lat || !lng) return;
 
-        // ── EPOCHEN-FARBLOGIK GENERIEREN ──
-        let color = '#FF8C42'; // Standard-Fallback (Orange)
+        // ── Epochen-Farblogik ──
+        let color = '#FF8C42'; 
 
         if (isWorldWonder(site)) {
-            color = '#FFD700'; // Weltwunder funkeln in GOLD
+            color = '#FFD700'; // Weltwunder in Gold
         } else {
             const era = getSiteEra(site); 
             if (era === 'ancient') {
@@ -172,7 +131,6 @@ function updateMarkers() {
             }
         }
 
-        // Vollständig gefüllte Leaflet-Marker mit echtem JavaScript-Kommentar
         const marker = L.circleMarker([lat, lng], {
             radius: isWorldWonder(site) ? 8 : 5,
             fillColor: color,
@@ -187,7 +145,31 @@ function updateMarkers() {
     });
 }
 
-// ── 6. WIKIPEDIA SLIDESHOW & TEXT ─────────────
+function getFilteredSites() {
+    return sites.filter(site => {
+        if (activeFilters.type !== 'all') {
+            const isWonder = isWorldWonder(site);
+            if (activeFilters.type === 'wonder' && !isWonder) return false;
+            if (activeFilters.type === 'heritage' && isWonder) return false;
+        }
+        if (activeFilters.era !== 'all') {
+            if (getSiteEra(site) !== activeFilters.era) return false;
+        }
+        if (activeFilters.region !== 'all') {
+            const siteRegion = String(site.region_en || site.region || '').toLowerCase();
+            const filterRegion = String(activeFilters.region).toLowerCase();
+            if (!siteRegion.includes(filterRegion)) return false;
+        }
+        return true;
+    });
+}
+
+function applyFiltering() {
+    updateMarkers(); // KORREKTUR: updateMarkers statt addMarkers aufrufen!
+    renderExploreList();
+}
+
+// ── 8. WIKIPEDIA SLIDESHOW & TEXT ─────────────
 async function fetchSlideshow(siteName) {
     const isPhoto = t => /\.(jpg|jpeg|png|JPG|JPEG|PNG)$/.test(t) &&
                          !/(flag|logo|map|coat|arms|icon|locator|location|seal|blank|relief)/i.test(t);
@@ -288,7 +270,7 @@ async function fetchWikipediaSummary(siteName) {
     }
 }
 
-// ── 7. QUIZ ───────────────────────────────────
+// ── 9. QUIZ ───────────────────────────────────
 function injectAdvancedQuiz(site, wikiText) {
     const quizContainer = document.getElementById('quiz-placeholder');
     if (!quizContainer) return;
@@ -387,12 +369,11 @@ function bindQuizEvents() {
     });
 }
 
-// ── 8. DETAILS ────────────────────────────────
+// ── 10. DETAILS ────────────────────────────────
 async function showDetails(site, coords) {
     if (!site) return;
     activeSite = site;
     
-    // Sidebar wieder reinschieben, falls sie geschlossen war
     const sidebar = document.querySelector('.sidebar');
     if (sidebar) sidebar.classList.remove('collapsed');
     
@@ -413,18 +394,15 @@ async function showDetails(site, coords) {
     if (metaEl)     metaEl.textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
     if (favBtnEl)   favBtnEl.textContent   = favorites.includes(id) ? '★' : '☆';
 
-    // Standardmäßig aktivieren wir beim Öffnen immer den "Beschreibung"-Tab visuell
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     const descTabBtn = document.querySelector('[data-tab="tab-desc"]');
     if (descTabBtn) descTabBtn.classList.add('active');
 
-    // Wir leeren den Geodaten-Container zuerst komplett aus dem Sichtfeld!
     const geoEl = document.getElementById('detail-geodata');
     if (geoEl) geoEl.innerHTML = '';
 
     const dbDescription = site.short_description_en || 'Keine Beschreibung vorhanden.';
     
-    // Erstbefüllung von TAB 1 (Beschreibung)
     const descEl = document.getElementById('detail-description');
     if (descEl) {
         descEl.innerHTML = `
@@ -466,13 +444,12 @@ async function showDetails(site, coords) {
     earnXP(10);
 }
 
-// ── 9. LISTS ──────────────────────────────────
+// ── 11. LISTS ──────────────────────────────────
 function renderExploreList() {
     const container = document.getElementById('view-explore');
     if (!container) return;
     container.innerHTML = '';
 
-    // Weltwunder als synthetische Sites zusammenbauen
     const wonderSites = WORLD_WONDERS.map(w => ({
         site: w.name,
         states_name_en: 'World Wonder',
@@ -487,13 +464,12 @@ function renderExploreList() {
         id_no: 'wonder_' + w.name.replace(/\s+/g, '_')
     }));
 
-    // Je nach Filter: Weltwunder, Heritage Sites oder beides
     let displayList = [];
     if (activeFilters.type === 'wonder') {
         displayList = wonderSites;
     } else if (activeFilters.type === 'heritage') {
         displayList = getFilteredSites().slice(0, 150);
-   } else {
+    } else {
         displayList = getFilteredSites().slice(0, 150);
     }
 
@@ -504,9 +480,9 @@ function renderExploreList() {
 
         const dotColor = isWonder ? '#8B5E3C' : (() => {
             const era = getSiteEra(site);
-            if (era === 'ancient')  return '#6a241c';
-            if (era === 'medieval') return '#cf6229';
-            return '#fbbf69';
+            if (era === 'ancient')  return '#4EA8DE';
+            if (era === 'medieval') return '#9D4EDD';
+            return '#72EFDD';
         })();
 
         const btn = document.createElement('button');
@@ -544,13 +520,11 @@ function renderFavList() {
 
         const era = getSiteEra(site);
         let dotColor = '#FF8C42';
-        if (era === 'ancient')  dotColor = '#6a241c';
-        if (era === 'medieval') dotColor = '#cf6229';
-        if (era === 'modern')   dotColor = '#fbbf69';
+        if (era === 'ancient')  dotColor = '#4EA8DE';
+        if (era === 'medieval') dotColor = '#9D4EDD';
+        if (era === 'modern')   dotColor = '#72EFDD';
 
         const item = document.createElement('button');
-        item.className = 'site-item';
-        item.style.color = dotColor; // WECHSEL: Auch in den Favoriten erbt der Stern die Farbe
         item.className = 'site-item';
         item.innerHTML = `
             <span class="site-dot" style="color: ${dotColor}">●</span>
@@ -570,7 +544,7 @@ function renderFavList() {
     });
 }
 
-// ── 10. FAVORITES ─────────────────────────────
+// ── 12. FAVORITES ─────────────────────────────
 function toggleFav(id) {
     const idx = favorites.indexOf(id);
     if (idx === -1) favorites.push(id);
@@ -583,14 +557,14 @@ function toggleFav(id) {
     }
 }
 
-// ── 11. XP ────────────────────────────────────
+// ── 13. XP ────────────────────────────────────
 function earnXP(amount) {
     userXP += amount;
     localStorage.setItem('chronos_xp', userXP);
     updateXP();
 }
 
-// ── 12. EVENTS ────────────────────────────────
+// ── 14. EVENTS ────────────────────────────────
 function updateXP() {
     const xpPointsEl = document.getElementById('xp-points');
     const xpFillEl = document.getElementById('xp-fill');
@@ -629,7 +603,6 @@ function bindEvents() {
         });
     });
 
-    // Kombinierter Filter Event-Listener
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', e => {
             const type = e.currentTarget.dataset.filterType;
@@ -660,7 +633,6 @@ function bindEvents() {
         });
     });
 
-  // Steuerung für das saubere Umschalten und Leeren der Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', e => {
             if (!activeSite) return;
@@ -673,7 +645,6 @@ function bindEvents() {
             const geoEl = document.getElementById('detail-geodata');
             
             if (targetTab === 'tab-desc') {
-                // Wenn wir auf Beschreibung klicken -> Geodaten löschen!
                 if (geoEl) geoEl.innerHTML = '';
                 
                 const dbDescription = activeSite.short_description_en || 'Keine Beschreibung vorhanden.';
@@ -691,7 +662,6 @@ function bindEvents() {
                     `;
                 }
                 
-                // Wikipedia & Quiz im Beschreibungstab re-initialisieren
                 const siteName = activeSite.site || activeSite.name_en || '';
                 fetchWikipediaSummary(siteName).then(wikiText => {
                     const wikiBlock = document.getElementById('wiki-extended-block');
@@ -706,7 +676,6 @@ function bindEvents() {
                 });
                 
             } else if (targetTab === 'tab-geo') {
-                // Wenn wir auf Geodaten klicken -> Beschreibung und Quiz radikal löschen!
                 if (descEl) descEl.innerHTML = '';
                 
                 if (geoEl) {
@@ -722,52 +691,37 @@ function bindEvents() {
         });
     });
 
-    // Event-Listener zum Ein- und Ausklappen der Seitenleiste
     const sidebar = document.querySelector('.sidebar');
     const toggleBtn = document.getElementById('btn-toggle-sidebar');
     
     if (toggleBtn && sidebar) {
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
-            // Leaflet mitteilen, dass sich der Container geändert hat
             setTimeout(() => { map.invalidateSize(); }, 400);
         });
     }
 }
 
-// ── 13. HELPERS ───────────────────────────────
+// ── 15. HELPERS ───────────────────────────────
 function parseCoord(val) {
     if (val === undefined || val === null) return null;
     const num = parseFloat(String(val).replace(',', '.'));
     return isNaN(num) ? null : num;
 }
 
+// KORREKTUR: Eindeutiger Spaltenabgleich für IDs
 function getSiteId(site) {
-    return site.id_no ?? site.unique_number ?? null;
+    if (!site) return null;
+    return site.id || site.id_no || site.unique_number || null;
 }
 
-function getSiteEra(site) {
-    const year = parseInt(site.date_inscribed);
-    if (!year) return 'modern';
-    if (year < 500)  return 'ancient';
-    if (year < 1500) return 'medieval';
-    return 'modern';
-}
-
-// ── START ─────────────────────────────────────
+// ── START ANSTOSSEN ───────────────────────────
 loadSites();
 
 // ══════════════════════════════════════════════════════════════
 //  VIRTUAL TOUR SYSTEM
 // ══════════════════════════════════════════════════════════════
-
-// ── TOUR DATA ─────────────────────────────────
-// Struktur: Pro Stätte eine Array von Stationen.
-// 'id' entspricht der site.id_no oder einem Schlüsselwort im Namen.
-// Passe Texte und Koordinaten hier jederzeit an.
-
 const TOUR_DATA = {
-    // ── BEISPIEL 1: Kolosseum ──────────────────
     "colosseum": {
         mapCenter: [12.4922, 41.8902],
         defaultZoom: 16,
@@ -776,92 +730,15 @@ const TOUR_DATA = {
                 tag: "Einführung",
                 title: "Das Flavische Amphitheater",
                 coords: [12.4922, 41.8902],
-                zoom: 16,
-                pitch: 50,
-                bearing: 30,
-                text: "Das Kolosseum – offiziell Amphitheatrum Flavium – ist das größte je erbaute Amphitheater der Antike. Kaiser Vespasian begann den Bau um 72 n. Chr. auf dem Gelände des künstlichen Sees, der zuvor zum Goldenen Haus Neros gehörte. Die Wahl dieses symbolisch aufgeladenen Ortes war eine bewusste politische Botschaft: Das Volk zurückerobert, was der Tyrann einst für sich beansprucht hatte.",
+                zoom: 16, pitch: 50, bearing: 30,
+                text: "Das Kolosseum – offiziell Amphitheatrum Flavium – ist das größte je erbaute Amphitheater der Antike...",
                 facts: [
                     { icon: "📐", label: "Maße", text: "188 m lang, 156 m breit, 48 m hoch" },
                     { icon: "👥", label: "Kapazität", text: "50.000–80.000 Zuschauer" }
                 ]
-            },
-            {
-                tag: "Ingenieurskunst",
-                title: "Das Hypogäum",
-                coords: [12.4933, 41.8905],
-                zoom: 17,
-                pitch: 60,
-                bearing: -20,
-                text: "Unter dem Boden der Arena erstreckte sich das Hypogäum – ein zweistöckiges Labyrinth aus Gängen, Käfigen und Aufzugsschächten. 80 senkrechte Schächte ermöglichten es, Tiere und Gladiatoren wie durch Zauberhand direkt in der Mitte der Arena erscheinen zu lassen. Die Mechanismen wurden von Hunderten Sklaven bedient, die unsichtbar unter den Füßen des jubelnden Publikums arbeiteten.",
-                facts: [
-                    { icon: "⚙️", label: "Technik", text: "80 Aufzugsschächte mit Gegengewichten" },
-                    { icon: "🦁", label: "Tiere", text: "Löwen, Tiger, Elefanten und Nashörner" }
-                ]
-            },
-            {
-                tag: "Verfall & Erbe",
-                title: "Vom Steinbruch zum Welterbe",
-                coords: [12.4915, 41.8898],
-                zoom: 16,
-                pitch: 45,
-                bearing: 90,
-                text: "Nach dem Ende der Spiele im 6. Jahrhundert verfiel das Kolosseum langsam. Im Mittelalter diente es als Steinbruch: Schätzungsweise zwei Drittel des originalen Materials wurden entfernt, um Roms Kirchen und Paläste zu erbauen. Der berühmte Petersdom soll Steine aus dem Kolosseum enthalten. Erst 1749 erklärte Papst Benedikt XIV. die Stätte zum heiligen Boden und stoppte den Abbau.",
-                facts: [
-                    { icon: "⛪", label: "Zweck im MA", text: "Steinbruch, Festung, Wohnquartier" },
-                    { icon: "🏛️", label: "UNESCO", text: "Welterbe seit 1980" }
-                ]
             }
         ]
     },
-
-    // ── BEISPIEL 2: Angkor Wat ─────────────────
-    "angkor": {
-        mapCenter: [103.8469, 13.3667],
-        defaultZoom: 15,
-        stations: [
-            {
-                tag: "Der Tempel",
-                title: "Angkor Wat – Weltbild in Stein",
-                coords: [103.8469, 13.3667],
-                zoom: 15,
-                pitch: 50,
-                bearing: 10,
-                text: "Angkor Wat wurde im frühen 12. Jahrhundert unter König Suryavarman II. als staatlicher Tempel errichtet. Der Komplex ist nach Westen ausgerichtet – ungewöhnlich für hinduistische Tempel – was von manchen Historikern als Hinweis auf eine funeräre Funktion gedeutet wird. Der Westteil gilt in der indischen Kosmologie als Reich der Toten und der untergehenden Sonne.",
-                facts: [
-                    { icon: "📅", label: "Erbaut", text: "ca. 1113–1150 n. Chr." },
-                    { icon: "🌐", label: "Fläche", text: "1.626 km² (gesamtes Angkor-Areal)" }
-                ]
-            },
-            {
-                tag: "Das Wassersystem",
-                title: "Hydraulische Meisterleistung",
-                coords: [103.8550, 13.3580],
-                zoom: 14,
-                pitch: 55,
-                bearing: 45,
-                text: "Das Geheimnis von Angkors Macht lag nicht nur in seinen Tempeln, sondern unter ihnen: Ein ausgeklügeltes Netz aus Kanälen, Dämmen und riesigen Speicherseen (Barays) versorgte eine Metropole von fast einer Million Menschen mit Wasser. Neueste LiDAR-Untersuchungen aus Hubschraubern enthüllten 2015 die wahre Ausdehnung der versteckten Stadt – sie war größer als jede europäische Metropole des Mittelalters.",
-                facts: [
-                    { icon: "💧", label: "West Baray", text: "8 km × 2,2 km – größtes Reservoir" },
-                    { icon: "🛰️", label: "LiDAR 2015", text: "Nachweis von Vorstadt-Strukturen auf 3.000 km²" }
-                ]
-            },
-            {
-                tag: "Bas-Reliefs",
-                title: "Die Galerie der Geschichte",
-                coords: [103.8469, 13.3615],
-                zoom: 16,
-                pitch: 40,
-                bearing: -30,
-                text: "Die unteren Galerien von Angkor Wat sind mit über 800 Metern flachreliefierter Erzählung ausgestattet – das längste zusammenhängende Bas-Relief-Panorama der Welt. Szenen aus dem Mahabharata und Ramayana wechseln sich ab mit historischen Darstellungen, die Suryavarmans Heer beim Marsch zeigen. Eine Szene zeigt die 37 Höllen des hinduistischen Kosmosmodells in erschreckend plastischer Detailtreue.",
-                facts: [
-                    { icon: "🎨", label: "Länge", text: "ca. 800 m Bas-Relief ohne Unterbrechung" },
-                    { icon: "🪨", label: "Material", text: "Sandstein aus dem Kulen-Gebirge, 40 km entfernt" }
-                ]
-            }
-        ]
-    },
-
-    // ── FALLBACK / GENERIC ─────────────────────
     "default": {
         mapCenter: [0, 20],
         defaultZoom: 4,
@@ -870,56 +747,25 @@ const TOUR_DATA = {
                 tag: "Station 1",
                 title: "Überblick",
                 coords: [0, 20],
-                zoom: 4,
-                pitch: 30,
-                bearing: 0,
-                text: "Willkommen zur virtuellen Tour. Scrolle durch die Stationen, um die Karte rechts zu steuern und historische Hintergrundinformationen zu entdecken.",
-                facts: [
-                    { icon: "🗺️", label: "Navigation", text: "Scrolle im linken Bereich, um zur nächsten Station zu springen" }
-                ]
-            },
-            {
-                tag: "Station 2",
-                title: "Historischer Kontext",
-                coords: [10, 25],
-                zoom: 5,
-                pitch: 45,
-                bearing: 20,
-                text: "Jede Station kann individuell mit Text, Fakten-Karten und genauen GPS-Koordinaten bestückt werden. Passe die TOUR_DATA-Objekte in app.js an, um echte Inhalte einzubinden.",
-                facts: [
-                    { icon: "📝", label: "Anpassung", text: "Bearbeite TOUR_DATA in app.js" }
-                ]
-            },
-            {
-                tag: "Station 3",
-                title: "Abschluss",
-                coords: [20, 30],
-                zoom: 6,
-                pitch: 50,
-                bearing: -10,
-                text: "Die 3D-Karte fliegt automatisch zu den Koordinaten jeder Station, wenn diese in den sichtbaren Bereich scrollt. Der Pitch- und Bearing-Wert kann pro Station individuell gesetzt werden.",
-                facts: [
-                    { icon: "🌍", label: "MapTiler", text: "3D Outdoor-Karte mit Geländedarstellung" }
-                ]
+                zoom: 4, pitch: 30, bearing: 0,
+                text: "Willkommen zur virtuellen Tour. Scrolle durch die Stationen, um die Karte rechts zu steuern.",
+                facts: [{ icon: "🗺️", label: "Navigation", text: "Scrolle im linken Bereich" }]
             }
         ]
     }
 };
 
-// ── TOUR STATE ────────────────────────────────
 let tourMap3D       = null;
 let tourActive      = false;
 let tourObserver    = null;
 let currentStation  = 0;
 
-// ── FIND TOUR DATA FOR A SITE ─────────────────
 function getTourDataForSite(site) {
     if (!site) return TOUR_DATA.default;
     const name = (site.site || site.name_en || '').toLowerCase();
     for (const key of Object.keys(TOUR_DATA)) {
         if (key !== 'default' && name.includes(key)) return TOUR_DATA[key];
     }
-    // Try lat/lng fallback to build a 3-stop tour centered on the site
     const lat = parseCoord(site.latitude);
     const lng = parseCoord(site.longitude);
     if (lat !== null && lng !== null) {
@@ -939,71 +785,32 @@ function buildGenericTour(site, lat, lng) {
                 tag: "Einführung",
                 title: siteName,
                 coords: [lng, lat],
-                zoom: 13,
-                pitch: 50,
-                bearing: 20,
+                zoom: 13, pitch: 50, bearing: 20,
                 text: desc,
                 facts: [
                     { icon: "📅", label: "Eingeschrieben", text: String(site.date_inscribed || '–') },
                     { icon: "🌐", label: "Land", text: site.states_name_en || '–' }
-                ]
-            },
-            {
-                tag: "Lage & Umgebung",
-                title: "Geografischer Kontext",
-                coords: [lng + 0.01, lat + 0.005],
-                zoom: 14,
-                pitch: 55,
-                bearing: -20,
-                text: `${siteName} befindet sich in ${site.states_name_en || 'einer außergewöhnlichen Kulturlandschaft'} und wurde ${site.date_inscribed || ''} als UNESCO-Welterbestätte anerkannt. Die Stätte ist einzigartig in ihrer Art und repräsentiert ein unersetzliches Zeugnis menschlicher Geschichte und Kreativität.`,
-                facts: [
-                    { icon: "📍", label: "Region", text: site.region_en || '–' },
-                    { icon: "🏷️", label: "Kategorie", text: site.category || '–' }
-                ]
-            },
-            {
-                tag: "Bedeutung",
-                title: "Universeller Wert",
-                coords: [lng - 0.008, lat - 0.004],
-                zoom: 15,
-                pitch: 45,
-                bearing: 60,
-                text: `Der außergewöhnliche universelle Wert dieser Stätte liegt in ihrer einzigartigen Kombination aus historischer Bedeutung, architektonischer Leistung und kultureller Kontinuität. Sie gehört zu den ${site.region_en || 'weltweiten'} Zeugnissen, die für zukünftige Generationen bewahrt werden müssen.`,
-                facts: [
-                    { icon: "🏛️", label: "UNESCO-Kriterium", text: site.criteria_txt || 'Außergewöhnlicher Universeller Wert' },
-                    { icon: "🌍", label: "Welterbe seit", text: String(site.date_inscribed || '–') }
                 ]
             }
         ]
     };
 }
 
-// ── OPEN TOUR OVERLAY ─────────────────────────
 function openTourOverlay() {
     if (!activeSite) return;
     const tourData = getTourDataForSite(activeSite);
-
     const overlay = document.getElementById('tour-overlay');
-    const siteName = activeSite.site || activeSite.name_en || 'Tour';
-    document.getElementById('tour-site-name').textContent = siteName;
+    document.getElementById('tour-site-name').textContent = activeSite.site || activeSite.name_en || 'Tour';
 
-    // Render station cards
     renderTourStations(tourData.stations);
-
-    // Show overlay
     overlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     tourActive = true;
     currentStation = 0;
 
-    // Init or re-use MapLibre map
-    // Small delay so the overlay is rendered before init
-    requestAnimationFrame(() => {
-        initTourMap(tourData);
-    });
+    requestAnimationFrame(() => { initTourMap(tourData); });
 }
 
-// ── RENDER STATION CARDS ─────────────────────
 function renderTourStations(stations) {
     const container = document.getElementById('tour-stations');
     container.innerHTML = '';
@@ -1017,134 +824,68 @@ function renderTourStations(stations) {
                 <div class="tour-station-meta">
                     <div class="tour-station-tag">${s.tag}</div>
                     <div class="tour-station-title">${s.title}</div>
-                    <div class="tour-station-coords">${s.coords[1].toFixed(4)}° N, ${s.coords[0].toFixed(4)}° E</div>
                 </div>
             </div>
             <div class="tour-station-body">
                 <p class="tour-station-text">${s.text}</p>
-                <div class="tour-station-facts">
-                    ${s.facts.map(f => `
-                        <div class="tour-fact">
-                            <span class="tour-fact-icon">${f.icon}</span>
-                            <div><strong>${f.label}</strong>${f.text}</div>
-                        </div>
-                    `).join('')}
-                </div>
             </div>
         `;
         container.appendChild(div);
     });
 }
 
-// ── INIT MAPLIBRE MAP ─────────────────────────
 function initTourMap(tourData) {
-    const mapEl = document.getElementById('tour-map-3d');
-
-    // Destroy previous instance if exists
-    if (tourMap3D) {
-        tourMap3D.remove();
-        tourMap3D = null;
-    }
-
+    if (tourMap3D) { tourMap3D.remove(); tourMap3D = null; }
     tourMap3D = new maplibregl.Map({
         container: 'tour-map-3d',
         style: 'https://api.maptiler.com/maps/outdoor-v4/style.json?key=3b0cyHPw2Nrpd03F4W9d',
         center: tourData.mapCenter,
         zoom: tourData.defaultZoom,
-        pitch: 50,
-        bearing: 30,
-        antialias: true
+        pitch: 50, bearing: 30, antialias: true
     });
-
-    tourMap3D.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
-
     tourMap3D.on('load', () => {
-        // Fly to first station once loaded
-        const first = tourData.stations[0];
-        flyToStation(first, 0, tourData.stations.length);
-        setupScrollObserver(tourData.stations);
+        if (tourData.stations.length > 0) {
+            flyToStation(tourData.stations[0], 0, tourData.stations.length);
+            setupScrollObserver(tourData.stations);
+        }
     });
 }
 
-// ── FLY TO STATION ────────────────────────────
 function flyToStation(station, index, total) {
     if (!tourMap3D) return;
-
-    tourMap3D.flyTo({
-        center: station.coords,
-        zoom: station.zoom,
-        pitch: station.pitch,
-        bearing: station.bearing,
-        duration: 2800,
-        essential: true
-    });
-
-    // Update badge
+    tourMap3D.flyTo({ center: station.coords, zoom: station.zoom, pitch: station.pitch, bearing: station.bearing, duration: 2800 });
     const badge = document.getElementById('tour-map-badge-text');
     if (badge) badge.textContent = station.title;
-
-    // Update progress bar
-    const fill = document.getElementById('tour-progress-fill');
-    const label = document.getElementById('tour-progress-label');
-    if (fill) fill.style.width = `${((index + 1) / total) * 100}%`;
-    if (label) label.textContent = `Station ${index + 1} / ${total}`;
-
-    // Highlight active station card
-    document.querySelectorAll('.tour-station').forEach((el, i) => {
-        el.classList.toggle('active', i === index);
-    });
-
     currentStation = index;
 }
 
-// ── INTERSECTION OBSERVER FOR SCROLL ─────────
 function setupScrollObserver(stations) {
     if (tourObserver) tourObserver.disconnect();
-
     const pane = document.getElementById('tour-story-pane');
     const cards = document.querySelectorAll('.tour-station');
-
-    const options = {
-        root: pane,
-        rootMargin: '-30% 0px -50% 0px',
-        threshold: 0
-    };
-
     tourObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const i = parseInt(entry.target.dataset.index);
-                if (i !== currentStation) {
-                    flyToStation(stations[i], i, stations.length);
-                }
+                if (i !== currentStation) flyToStation(stations[i], i, stations.length);
             }
         });
-    }, options);
-
+    }, { root: pane, rootMargin: '-30% 0px -50% 0px' });
     cards.forEach(card => tourObserver.observe(card));
 }
 
-// ── CLOSE TOUR OVERLAY ────────────────────────
 function closeTourOverlay() {
     const overlay = document.getElementById('tour-overlay');
     overlay.classList.add('fade-out');
     setTimeout(() => {
-        overlay.classList.remove('fade-out');
-        overlay.classList.add('hidden');
-        document.body.style.overflow = '';
-        tourActive = false;
+        overlay.classList.remove('fade-out'); overlay.classList.add('hidden');
+        document.body.style.overflow = ''; tourActive = false;
         if (tourObserver) { tourObserver.disconnect(); tourObserver = null; }
-        // Don't destroy map – keep it for fast re-open
     }, 300);
 }
 
-// ── BIND TOUR EVENTS ─────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-start-tour').addEventListener('click', openTourOverlay);
     document.getElementById('btn-close-tour').addEventListener('click', closeTourOverlay);
-
-    // Close on Escape key
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && tourActive) closeTourOverlay();
-    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && tourActive) closeTourOverlay(); });
 });
