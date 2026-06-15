@@ -174,7 +174,7 @@ function getSiteEra(site) {
 function updateMarkers() {
     if (!map) return;
 
-    // KORREKTUR: Nutzt jetzt mapMarkers (wie in Zeile 24 definiert) statt markers!
+    // Nutzt mapMarkers wie global definiert
     mapMarkers.forEach(m => m.remove());
     mapMarkers = [];
 
@@ -191,7 +191,6 @@ function updateMarkers() {
     });
 
     filtered.forEach(site => {
-        // Nutzt wieder deinen funktionierenden Original-Aufruf
         const lat = parseCoord(site.latitude);
         const lng = parseCoord(site.longitude);
         if (!lat || !lng) return;
@@ -212,13 +211,14 @@ function updateMarkers() {
             }
         }
 
+        // Vollständig gefüllte Leaflet-Marker mit echtem JavaScript-Kommentar
         const marker = L.circleMarker([lat, lng], {
             radius: isWorldWonder(site) ? 8 : 5,
             fillColor: color,
-            color: isWorldWonder(site) ? '#FFF' : color,
+            color: '#FFFFFF',
             weight: isWorldWonder(site) ? 2 : 1,
             opacity: 1,
-            fillOpacity: 0.85
+            fillOpacity: 0.95
         }).addTo(map);
 
         marker.on('click', () => showDetails(site, [lat, lng]));
