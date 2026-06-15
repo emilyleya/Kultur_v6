@@ -678,42 +678,26 @@ function getSiteEra(site) {
     }
     return "modern";
 }
+const WORLD_WONDER_IDS = [
+    "taj mahal",
+    "machu picchu",
+    "petra",
+    "chichen itza",
+    "chichén itzá",
+    "christ the redeemer",
+    "cristo redentor",
+    "colosseum",
+    "flavian amphitheatre",
+    "amphitheatrum flavium",
+    "great wall of china"
+];
 
 function isWorldWonder(site) {
-    if (!site) return false;
-
     const name = (site.site || site.name_en || "")
         .toLowerCase()
         .trim();
 
-    const WORLD_WONDERS = [
-        "machu picchu",
-        "petra",
-        "taj mahal",
-        "chichen itza",
-        "chichén itzá",
-        "christ the redeemer",
-        "cristo redentor",
-        "colosseum",
-        "flavian amphitheatre",
-        "amphitheatrum flavium"
-    ];
-
-    // Exakter Treffer
-    if (WORLD_WONDERS.includes(name)) {
-        return true;
-    }
-
-    // Great Wall Sonderfall
-    if (
-        name === "great wall of china" ||
-        name === "the great wall" ||
-        name === "great wall"
-    ) {
-        return true;
-    }
-
-    return false;
+    return WORLD_WONDER_IDS.includes(name);
 }
 
 // ── START ─────────────────────────────────────
