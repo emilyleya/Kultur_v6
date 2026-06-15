@@ -118,65 +118,60 @@ function getSiteEra(site) {
 }
 
 // ── 5. MARKERS ────────────────────────────────
-function addMarkers() {
-    mapMarkers.forEach(m => map.removeLayer(m));
-    mapMarkers = [];
+function updateMarkers() {
+    if (!map) return;
 
-    // Weltwunder-Marker
-    WORLD_WONDERS.forEach(wonder => {
-        const wonderSite = {
-            site: wonder.name,
-            states_name_en: 'World Wonder',
-            category: 'New Seven Wonders',
-            date_inscribed: null,
-            latitude: wonder.lat,
-            longitude: wonder.lng,
-            short_description_en: '',
-            region_en: '',
-            area_hectares: '',
-            criteria_txt: '',
-            id_no: 'wonder_' + wonder.name.replace(/\s+/g, '_')
-        };
+    // Old markers cleanup
+    markers.forEach(m => m.remove());
+    markers = [];
 
-        const icon = L.divIcon({
-            className: 'wonder-marker',
-            html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
-            iconSize: [24, 24], iconAnchor: [12, 12]
-        });
+    const searchVal = document.getElementById('search-input')?.value.toLowerCase() || "";
+    const activeCat = document.querySelector('.filter-btn.active')?.dataset.category || "all";
 
-        const marker = L.marker([wonder.lat, wonder.lng], { icon })
-            .addTo(map)
-            .on('click', () => showDetails(wonderSite, [wonder.lat, wonder.lng]));
-
-        mapMarkers.push(marker);
+    const filtered = sites.filter(site => {
+        const matchesSearch = (site.site || "").toLowerCase().includes(searchVal) ||
+                              (site.states_name_en || "").toLowerCase().includes(searchVal);
+        
+        if (activeCat === "all") return matchesSearch;
+        if (activeCat === "wonder") return matchesSearch && isWorldWonder(site);
+        return matchesSearch && (site.category || "").toLowerCase() === activeCat.toLowerCase();
     });
 
-    // UNESCO-Stätten-Marker
-    getFilteredSites().forEach(site => {
+    filtered.forEach(site => {
         const lat = parseCoord(site.latitude);
         const lng = parseCoord(site.longitude);
-        if (lat === null || lng === null) return;
+        if (!lat || !lng) return;
 
-        const era = getSiteEra(site);
-        let markerColor = '#FF8C42';
-        if (era === 'ancient')  markerColor = '#6a241c';
-        if (era === 'medieval') markerColor = '#cf6229';
-        if (era === 'modern')   markerColor = '#fbbf69';
+        // ── EPOCHEN-FARBLOGIK GENERIEREN ──
+        let color = '#FF8C42'; // Standard-Fallback (Orange)
 
-        const icon = L.divIcon({
-            className: 'custom-marker',
-            html: `<div class="marker-wrap"><div class="marker-core" style="background:${markerColor}"></div></div>`,
-            iconSize: [14, 14], iconAnchor: [7, 7]
-        });
+        if (isWorldWonder(site)) {
+            color = '#FFD700'; // Weltwunder funkeln in GOLD
+        } else {
+            // Nutzen der unten in deiner Datei definierten Funktion getSiteEra()
+            const era = getSiteEra(site); 
+            if (era === 'ancient') {
+                color = '#4EA8DE'; // Antike -> Blau
+            } else if (era === 'medieval') {
+                color = '#9D4EDD'; // Mittelalter -> Lila
+            } else if (era === 'modern') {
+                color = '#72EFDD'; // Moderne -> Türkis
+            }
+        }
 
-        const marker = L.marker([lat, lng], { icon })
-            .addTo(map)
-            .on('click', () => showDetails(site, [lat, lng]));
+        const marker = L.circleMarker([lat, lng], {
+            radius: isWorldWonder(site) ? 8 : 5,
+            fillColor: color,
+            color: isWorldWonder(site) ? '#FFF' : color,
+            weight: isWorldWonder(site) ? 2 : 1,
+            opacity: 1,
+            fillOpacity: 0.85
+        }).addTo(map);
 
-        mapMarkers.push(marker);
+        marker.on('click', () => showDetails(site));
+        markers.push(marker);
     });
 }
-
 function getFilteredSites() {
     return sites.filter(site => {
         if (activeFilters.type !== 'all') {
