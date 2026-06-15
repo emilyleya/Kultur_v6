@@ -138,6 +138,19 @@ function addMarkers() {
             });
         }
 
+         function isWorldWonder(site) {
+    const name = (site.site || site.name_en || '').toLowerCase();
+    return WORLD_WONDERS.some(w => w.name.toLowerCase() === name);
+}
+
+function getSiteEra(site) {
+    const year = parseInt(site.date_inscribed);
+    if (!year) return 'all';
+    if (year < 500)  return 'ancient';
+    if (year < 1500) return 'medieval';
+    return 'modern';
+}
+        
 // Weltwunder werden als synthetische Site-Objekte behandelt
 // damit showDetails() mit Bildern/Quiz/Tour funktioniert
 WORLD_WONDERS.forEach(wonder => {
@@ -168,18 +181,7 @@ WORLD_WONDERS.forEach(wonder => {
 
     mapMarkers.push(marker);
 });
-        function isWorldWonder(site) {
-    const name = (site.site || site.name_en || '').toLowerCase();
-    return WORLD_WONDERS.some(w => w.name.toLowerCase() === name);
-}
-
-function getSiteEra(site) {
-    const year = parseInt(site.date_inscribed);
-    if (!year) return 'all';
-    if (year < 500)  return 'ancient';
-    if (year < 1500) return 'medieval';
-    return 'modern';
-}
+       
         const marker = L.marker([lat, lng], { icon })
             .addTo(map)
             .on('click', () => showDetails(site, [lat, lng]));
