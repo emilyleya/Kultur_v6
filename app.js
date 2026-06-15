@@ -111,9 +111,9 @@ function isWorldWonder(site) {
 }
 
 function getSiteEra(site) {
-    const text = ((site.short_description_en || '') + ' ' + (site.site || '')).toLowerCase();
-    if (text.includes('ancient') || text.includes(' bc') || text.includes('roman') || text.includes('greek') || text.includes('prehistoric') || text.includes('neolithic')) return 'ancient';
-    if (text.includes('medieval') || text.includes('monastery') || text.includes('gothic') || text.includes('byzantine') || text.includes('ottoman') || text.includes('dynasty')) return 'medieval';
+    const text = ((site.short_description_en || '') + ' ' + (site.site || '') + ' ' + (site.justification_en || '')).toLowerCase();
+    if (text.includes(' bc') || text.includes('ancient') || text.includes('roman empire') || text.includes('greek') || text.includes('prehistoric') || text.includes('neolithic') || text.includes('bronze age') || text.includes('iron age') || text.includes('pharaoh') || text.includes('mesopotamia') || text.includes('classical antiquity')) return 'ancient';
+    if (text.includes('medieval') || text.includes('middle ages') || text.includes('monastery') || text.includes('gothic') || text.includes('byzantine') || text.includes('ottoman') || text.includes('dynasty') || text.includes('feudal') || text.includes('crusader') || text.includes('romanesque') || text.includes('renaissance') || text.includes('baroque')) return 'medieval';
     return 'modern';
 }
 
