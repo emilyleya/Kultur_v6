@@ -758,27 +758,6 @@ function getSiteEra(site) {
     }
     return "modern";
 }
-const WORLD_WONDER_IDS = [
-    "taj mahal",
-    "machu picchu",
-    "petra",
-    "chichen itza",
-    "chichén itzá",
-    "christ the redeemer",
-    "cristo redentor",
-    "colosseum",
-    "flavian amphitheatre",
-    "amphitheatrum flavium",
-    "great wall of china"
-];
-
-function isWorldWonder(site) {
-    const name = (site.site || site.name_en || "")
-        .toLowerCase()
-        .trim();
-
-    return WORLD_WONDER_IDS.includes(name);
-}
 
 // ── START ─────────────────────────────────────
 loadSites();
