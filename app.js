@@ -138,44 +138,33 @@ function addMarkers() {
             });
         }
 
-        WORLD_WONDERS.forEach(wonder => {
+// Weltwunder werden als synthetische Site-Objekte behandelt
+// damit showDetails() mit Bildern/Quiz/Tour funktioniert
+WORLD_WONDERS.forEach(wonder => {
+    const wonderSite = {
+        site: wonder.name,
+        states_name_en: 'World Wonder',
+        category: 'New Seven Wonders',
+        date_inscribed: null,
+        latitude: wonder.lat,
+        longitude: wonder.lng,
+        short_description_en: '',
+        region_en: '',
+        area_hectares: '',
+        criteria_txt: '',
+        id_no: 'wonder_' + wonder.name.replace(/\s+/g, '_')
+    };
 
     const icon = L.divIcon({
         className: 'wonder-marker',
-        html: `
-            <div class="wonder-wrap">
-                <div class="wonder-star-glyph">★</div>
-            </div>
-        `,
+        html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
         iconSize: [24, 24],
         iconAnchor: [12, 12]
     });
 
-    const marker = L.marker(
-        [wonder.lat, wonder.lng],
-        { icon }
-    ).addTo(map);
-
-    marker.on('click', () => {
-
-        document.getElementById('detail-title').textContent =
-            wonder.name;
-
-        document.getElementById('detail-country').textContent =
-            'World Wonder';
-
-        document.getElementById('detail-category').textContent =
-            'New Seven Wonders';
-
-        document.getElementById('detail-meta').textContent =
-            '';
-
-        document.getElementById('panel-welcome')
-            .classList.remove('active');
-
-        document.getElementById('panel-details')
-            .classList.add('active');
-    });
+    const marker = L.marker([wonder.lat, wonder.lng], { icon })
+        .addTo(map)
+        .on('click', () => showDetails(wonderSite, [wonder.lat, wonder.lng]));
 
     mapMarkers.push(marker);
 });
