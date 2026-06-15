@@ -682,23 +682,23 @@ function getSiteEra(site) {
 function isWorldWonder(site) {
     if (!site) return false;
 
-    // 1. Wir holen uns den Namen der Stätte und vereinheitlichen ihn (Kleinbuchstaben & ohne HTML-Reste)
-    const name = (site.site || site.name_en || "")
-        .toLowerCase()
-        .replace(/<[^>]*>/g, '') // Entfernt eventuelle HTML-Tags wie <em> aus dem Namen
-        .trim();
+    // 1. Wir holen uns den offiziellen Namen aus der UNESCO-Datenbank
+    const rawName = (site.site || site.name_en || "").toLowerCase();
 
-    // 2. Lückenlose Namensliste aller 7 Weltwunder (inkl. deutscher & englischer Wikipedia-Begriffe)
-    const isGreatWall   = name.includes("great wall") || name.includes("chinesische mauer");
-    const isPetra       = name.includes("petra");
-    const isChrist      = name.includes("rio de janeiro") || name.includes("corcovado") || name.includes("christ the redeemer") || name.includes("cristo redentor");
-    const isMachuPicchu = name.includes("machu") || name.includes("picchu");
-    const isChichenItza = name.includes("chichen") || name.includes("itzá") || name.includes("itza");
-    const isColosseum   = name.includes("colosseum") || name.includes("colloseum") || name.includes("colosseo") || name.includes("rome") || name.includes("rom");
-    const isTajMahal    = name.includes("taj mahal");
+    // 2. EXAKTER MATCH: Wir prüfen die Stätten anhand ihrer eindeutigen, echten Namen.
+    // Das verhindert, dass das gesamte historische Zentrum von Rom oder ganz Rio zum Weltwunder wird!
+    const isColosseum   = rawName.includes("colosseum") || rawName.includes("colloseum") || rawName.includes("flavian amphitheat");
+    const isTajMahal    = rawName.includes("taj mahal");
+    const isMachuPicchu = rawName.includes("machu picchu");
+    const isPetra       = rawName.includes("petra");
+    const isGreatWall   = rawName.includes("great wall");
+    const isChichenItza = rawName.includes("chichen itza") || rawName.includes("chichén itzá");
+    
+    // Für Rio suchen wir nach dem konkreten Monument-Eintrag, nicht nach der ganzen Stadt
+    const isChristRedeemer = rawName.includes("christ the redeemer") || rawName.includes("cristo redentor") || (rawName.includes("rio de janeiro") && rawName.includes("landscapes"));
 
-    // 3. Wenn irgendein Begriff matcht, verwandelt JavaScript den Punkt sofort in einen goldenen Stern!
-    return isGreatWall || isPetra || isChrist || isMachuPicchu || isChichenItza || isColosseum || isTajMahal;
+    // 3. Nur wenn einer dieser 7 exakten Treffer anschlägt, gibt es einen goldenen Stern!
+    return isColosseum || isTajMahal || isMachuPicchu || isPetra || isGreatWall || isChichenItza || isChristRedeemer;
 }
 
 // ── START ─────────────────────────────────────
