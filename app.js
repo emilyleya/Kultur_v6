@@ -681,8 +681,7 @@ function getSiteEra(site) {
 
 function isWorldWonder(site) {
     const name = (site.site || site.name_en || "").toLowerCase();
-    return id === "91" ||
-           name.includes("great wall") ||          
+    return name.includes("great wall") ||          
            name.includes("petra") ||               
            name.includes("rio de janeiro") ||      
            name.includes("machu picchu") ||        
