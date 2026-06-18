@@ -375,13 +375,21 @@ button { font-family: inherit; cursor: pointer; }
 
 .custom-marker { background: none; border: none; }
 .marker-wrap { position: relative; width: 14px; height: 14px; }
+/* Heller Modus */
 .marker-core {
-    width: 10px; height: 10px;
-    border: 2px solid rgba(180, 160, 140, 0.6);
+    width: 10px;
+    height: 10px;
+    border: 2px solid rgba(255,255,255,0.9); /* weiß */
     border-radius: 50%;
     position: absolute;
-    top: 2px; left: 2px;
+    top: 2px;
+    left: 2px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* Dunkler Modus */
+body.dark .marker-core {
+    border-color: #2B2B2B; /* Anthrazit */
 }
 
 .quiz-card {
@@ -626,12 +634,19 @@ body. .quiz-wrong {
     justify-content: center;
 }
 
+/* Heller Modus */
 .wonder-star-glyph {
     font-size: 13px;
-    color: #401B02;
+    color: #2A2A2A; /* dunkles Grau */
     text-shadow: 0 1px 2px rgba(255,255,255,0.6);
     z-index: 2;
     animation: wonderPulse 3s infinite ease-in-out;
+}
+
+/* Dunkler Modus */
+body.dark .wonder-star-glyph {
+    color: #E9D9C7; /* helles Beige */
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
 @keyframes wonderPulse {
