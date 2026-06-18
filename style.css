@@ -375,34 +375,13 @@ button { font-family: inherit; cursor: pointer; }
 
 .custom-marker { background: none; border: none; }
 .marker-wrap { position: relative; width: 14px; height: 14px; }
-/* ==========================================================================
-   MODUS-SPEZIFISCHE ANPASSUNGEN FÜR MARKER UND STERNE
-   ========================================================================== */
-
-/* --- HELLER MODUS (Standard) --- */
-/* Die Umrandung der normalen UNESCO-Marker bleibt im hellen Modus weiß */
 .marker-core {
-    border: 2px solid #ffffff !important;
-}
-
-/* Die Weltwunder-Sterne haben im hellen Modus ihre standardmäßige dunkle Farbe */
-.wonder-star-glyph {
-    color: #401B02;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
-}
-
-
-/* --- DUNKLER MODUS (body.dark) --- */
-/* Im Dark Mode werden die Sterne strahlend weiß */
-body.dark .wonder-star-glyph {
-    color: #ffffff !important;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8); /* Eleganter Glow-Effekt im Dunkeln */
-}
-
-/* Falls du möchtest, dass sich die Umrandung der UNESCO-Marker im Dark Mode anpasst 
-   (z.B. dunkel wird, damit das Weiß der Sterne besser hervorsticht), kannst du das hier steuern: */
-body.dark .marker-core {
-    border: 2px solid rgba(20, 18, 16, 0.8); /* Optional: Dunkler Rand im Dark Mode */
+    width: 10px; height: 10px;
+    border: 2px solid rgba(180, 160, 140, 0.6);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px; left: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 .quiz-card {
