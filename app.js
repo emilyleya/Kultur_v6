@@ -154,6 +154,34 @@ function getSiteEra(site) {
     return 'modern';
 }
 
+function getFilteredSites() {
+    return sites.filter(site => {
+
+        // Typfilter
+        if (activeFilters.type !== 'all') {
+            const wonder = isWorldWonder(site);
+
+            if (activeFilters.type === 'wonder' && !wonder) return false;
+            if (activeFilters.type === 'heritage' && wonder) return false;
+        }
+
+        // Epochenfilter
+        if (activeFilters.era !== 'all') {
+            if (getSiteEra(site) !== activeFilters.era) return false;
+        }
+
+        // Regionsfilter
+        if (activeFilters.region !== 'all') {
+            const siteRegion = String(site.region_en || site.region || '').toLowerCase();
+            const filterRegion = String(activeFilters.region).toLowerCase();
+
+            if (!siteRegion.includes(filterRegion)) return false;
+        }
+
+        return true;
+    });
+}
+
 // ── 7. MARKERS & FILTER LOGIC ─────────────────
 function updateMarkers() {
     if (!map) return;
