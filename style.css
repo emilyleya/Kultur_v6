@@ -389,7 +389,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Dunkler Modus */
 body.dark .marker-core {
-    border-color: #2B2B2B; /* Anthrazit */
+    border-color: #8c8680; /* Anthrazit */
 }
 
 .quiz-card {
