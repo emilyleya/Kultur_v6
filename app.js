@@ -201,28 +201,13 @@ function updateMarkers() {
     });
 }
 
-function getFilteredSites() {
-    return sites.filter(site => {
-        if (activeFilters.type !== 'all') {
-            const isWonder = isWorldWonder(site);
-            if (activeFilters.type === 'wonder' && !isWonder) return false;
-            if (activeFilters.type === 'heritage' && isWonder) return false;
-        }
-        if (activeFilters.era !== 'all') {
-            if (getSiteEra(site) !== activeFilters.era) return false;
-        }
-        if (activeFilters.region !== 'all') {
-            const siteRegion = String(site.region_en || site.region || '').toLowerCase();
-            const filterRegion = String(activeFilters.region).toLowerCase();
-            if (!siteRegion.includes(filterRegion)) return false;
-        }
-        return true;
-    });
-}
+
+
+
 
 function applyFiltering() {
-    updateMarkers(); // KORREKTUR: updateMarkers statt addMarkers aufrufen!
-    ExploreList();
+    updateMarkers();
+    renderExploreList();
 }
 
 // ── 8. WIKIPEDIA SLIDESHOW & TEXT ─────────────
