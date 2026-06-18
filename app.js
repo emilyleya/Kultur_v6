@@ -143,16 +143,7 @@ function initMap() {
 
 // ── 6. Hilfsfunktionen ───────────────────────────
 function isWorldWonder(site) {
-    if (!site) return false;
-    const name = (site.site || site.name_en || "").toLowerCase();
-    // Nutzt tolerante Kurzbegriffe, damit kein Weltwunder durch Datenbank-Namen blockiert wird
-    return name.includes("great wall") ||          
-           name.includes("petra") ||               
-           name.includes("rio de janeiro") ||      
-           name.includes("machu picchu") ||        
-           name.includes("chichen") ||             
-           name.includes("colosseum") ||           
-           name.includes("taj mahal");             
+    return site.type === "wonder";
 }
 
 function getSiteEra(site) {
