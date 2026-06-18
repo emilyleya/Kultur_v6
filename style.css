@@ -73,7 +73,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .header-logo {
-    font-size: 17px;
+    font-size: 25px;
     font-weight: 700;
     letter-spacing: -0.3px;
     color: var(--text);
