@@ -28,15 +28,78 @@ let activeFilters = {
     region: 'all'
 };
 
-// ── 3. WORLD WONDERS CONFIG (Muss VOR den Funktionen stehen!) ──
+// ── 3.  WONDERS CONFIG (Muss VOR den Funktionen stehen!) ──
 const WORLD_WONDERS = [
-    { name: "Great Wall of China", lat: 40.4319, lng: 116.5704 },
-    { name: "Petra", lat: 30.3285, lng: 35.4444 },
-    { name: "Christ the Redeemer", lat: -22.9519, lng: -43.2105 },
-    { name: "Machu Picchu", lat: -13.1631, lng: -72.5450 },
-    { name: "Chichen Itza", lat: 20.6843, lng: -88.5678 },
-    { name: "Colosseum", lat: 41.8902, lng: 12.4922 },
-    { name: "Taj Mahal", lat: 27.1751, lng: 78.0421 }
+{
+    id: "wonder_great_wall",
+    site: "Great Wall of China",
+    latitude: 40.4319,
+    longitude: 116.5704,
+    states_name_en: "China",
+    category: "Seven Wonders",
+    date_inscribed: "2007",
+    type: "wonder"
+},
+{
+    id: "wonder_petra",
+    site: "Petra",
+    latitude: 30.3285,
+    longitude: 35.4444,
+    states_name_en: "Jordan",
+    category: "Seven Wonders",
+    date_inscribed: "2007",
+    type: "wonder"
+},
+{
+    id: "wonder_christ",
+    site: "Christ the Redeemer",
+    latitude: -22.9519,
+    longitude: -43.2105,
+    states_name_en: "Brazil",
+    category: "Seven Wonders",
+    date_inscribed: "2007",
+    type: "wonder"
+},
+{
+    id: "wonder_machu",
+    site: "Machu Picchu",
+    latitude: -13.1631,
+    longitude: -72.5450,
+    states_name_en: "Peru",
+    category: "Seven Wonders",
+    date_inscribed: "2007",
+    type: "wonder"
+},
+{
+    id: "wonder_chichen",
+    site: "Chichen Itza",
+    latitude: 20.6843,
+    longitude: -88.5678,
+    states_name_en: "Mexico",
+    category: "Seven Wonders",
+    date_inscribed: "2007",
+    type: "wonder"
+},
+{
+    id: "wonder_colosseum",
+    site: "Colosseum",
+    latitude: 41.8902,
+    longitude: 12.4922,
+    states_name_en: "Italy",
+    category: "Seven Wonders",
+    date_inscribed: "2007",
+    type: "wonder"
+},
+{
+    id: "wonder_taj",
+    site: "Taj Mahal",
+    latitude: 27.1751,
+    longitude: 78.0421,
+    states_name_en: "India",
+    category: "Seven Wonders",
+    date_inscribed: "2007",
+    type: "wonder"
+}
 ];
 
 // ── 4. SUPABASE ───────────────────────────────
