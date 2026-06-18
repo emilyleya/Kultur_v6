@@ -109,7 +109,10 @@ async function loadSites() {
     try {
         const { data, error } = await supabaseClient.from('heritage_sites').select('*');
         if (error) throw error;
-        sites = data;
+        sites = [
+    ...data,
+    ...WORLD_WONDERS
+];
         initApp();
     } catch (err) {
         console.error('Supabase Fehler:', err.message);
@@ -449,6 +452,8 @@ async function showDetails(site, coords) {
     const titleEl    = document.getElementById('detail-title');
     const metaEl     = document.getElementById('detail-meta');
     const favBtnEl   = document.getElementById('btn-fav');
+    const lat = parseCoord(site.latitude);
+const lng = parseCoord(site.longitude);
 
     if (countryEl)  countryEl.textContent  = site.states_name_en || 'Weltweit';
     if (categoryEl) categoryEl.textContent = site.category || 'UNESCO';
