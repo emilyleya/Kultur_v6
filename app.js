@@ -128,7 +128,31 @@ function initApp() {
     renderExploreList();
     renderFavList();
     updateXP();
+    
+    // KORREKTUR: Macht den "click a dot"-Text fit für die drei Punkte
+    setupDiscoverNotice();
+    
     bindEvents();
+}
+
+// Neue Hilfsfunktion für das visuelle Upgrade des Infotextes
+function setupDiscoverNotice() {
+    // Falls du dem Element im HTML eine ID gegeben hast, nutze diese. 
+    // Andernfalls fangen wir das Element über den Standardtext ab:
+    const sidebarHeaders = document.querySelectorAll('.sidebar p, .sidebar div');
+    sidebarHeaders.forEach(el => {
+        if (el.textContent.includes('click a dot to discover the world')) {
+            el.className = 'discover-notice';
+            el.innerHTML = `
+                <span class="discover-dots">
+                    <span class="discover-dot ancient"></span>
+                    <span class="discover-dot medieval"></span>
+                    <span class="discover-dot modern"></span>
+                </span>
+                <span>click a dot to discover the world</span>
+            `;
+        }
+    });
 }
 
 function initMap() {
