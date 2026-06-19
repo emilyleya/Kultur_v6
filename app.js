@@ -231,11 +231,24 @@ function updateMarkers() {
 
         let icon;
         if (isWorldWonder(site)) {
-            icon = L.divIcon({
-                className: 'wonder-marker',
-                html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
-                iconSize: [24, 24], iconAnchor: [12, 12]
-            });
+            // KORREKTUR: Unterscheidung zwischen antiken und modernen Weltwundern
+            const isAncientWonder = site.category && site.category.includes("Ancient");
+
+            if (isAncientWonder) {
+                // Antike Weltwunder bekommen das Dreieck (▲)
+                icon = L.divIcon({
+                    className: 'wonder-marker ancient-wonder-marker',
+                    html: `<div class="wonder-wrap"><div class="wonder-triangle-glyph">▲</div></div>`,
+                    iconSize: [24, 24], iconAnchor: [12, 12]
+                });
+            } else {
+                // Moderne Weltwunder behalten den Stern (★)
+                icon = L.divIcon({
+                    className: 'wonder-marker',
+                    html: `<div class="wonder-wrap"><div class="wonder-star-glyph">★</div></div>`,
+                    iconSize: [24, 24], iconAnchor: [12, 12]
+                });
+            }
         } else {
             const era = getSiteEra(site);
             let markerColor = '#FF8C42'; 
