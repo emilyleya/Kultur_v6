@@ -955,6 +955,26 @@ function updateTourProgress(index, total) {
     ).textContent = `Station ${index + 1} / ${total}`;
 
 }
+
+    document.querySelectorAll('.tour-station')
+.forEach(card => card.classList.remove('active'));
+
+const activeCard =
+document.querySelector(
+`.tour-station[data-index="${index}"]`
+);
+
+if(activeCard){
+
+    activeCard.classList.add('active');
+
+    activeCard.scrollIntoView({
+        behavior:"smooth",
+        block:"center"
+    });
+
+}
+    
     // Progressbar aktualisieren
     updateTourProgress(i, stations.length);
 
