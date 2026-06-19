@@ -1027,8 +1027,17 @@ color:white;
 transition:.3s;
 }
 
-.tour-station.active .tour-station-number {
-    background: var(--accent);
+.tour-station.active .tour-station-number{
+    background:#cf6229;
+    transform:scale(1.1);
+}
+
+.tour-station.active .tour-station-title{
+    color:#cf6229;
+}
+
+.tour-station.active .tour-station-tag{
+    color:#cf6229;
 }
 
 .tour-station-meta {
