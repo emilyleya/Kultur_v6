@@ -462,7 +462,7 @@ const lng = parseCoord(site.longitude);
     if (countryEl)  countryEl.textContent  = site.states_name_en || 'Weltweit';
     if (categoryEl) categoryEl.textContent = site.category || 'UNESCO';
     if (titleEl)    titleEl.textContent    = siteName;
-    if (metaEl)     metaEl.textContent     = `Eingeschrieben: ${site.date_inscribed || '–'}`;
+    if (metaEl)     metaEl.textContent     = `registered: ${site.date_inscribed || '–'}`;
     if (favBtnEl)   favBtnEl.textContent   = favorites.includes(id) ? '★' : '☆';
 
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -841,7 +841,7 @@ function buildGenericTour(site, lat, lng) {
                 zoom: 13, pitch: 50, bearing: 20,
                 text: desc,
                 facts: [
-                    { icon: "📅", label: "Eingeschrieben", text: String(site.date_inscribed || '–') },
+                    { icon: "📅", label: "registered", text: String(site.date_inscribed || '–') },
                     { icon: "🌐", label: "Land", text: site.states_name_en || '–' }
                 ]
             }
