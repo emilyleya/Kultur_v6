@@ -572,10 +572,10 @@ function renderFavList() {
         if (!site) return;
 
         const era = getSiteEra(site);
-        let dotColor = '#FF8C42';
-        if (era === 'ancient')  dotColor = '#4EA8DE';
-        if (era === 'medieval') dotColor = '#9D4EDD';
-        if (era === 'modern')   dotColor = '#72EFDD';
+let dotColor = '#FF8C42';
+if (era === 'ancient')  dotColor = '#6a241c';
+if (era === 'medieval') dotColor = '#cf6229';
+if (era === 'modern')   dotColor = '#fbbf69';
 
         const item = document.createElement('button');
         item.className = 'site-item';
