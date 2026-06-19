@@ -1024,27 +1024,39 @@ function initTourMap(tourData) {
 }
 
 function flyToStation(station, index, total) {
+
     if (!tourMap3D) return;
-    tourMap3D.flyTo({ center: station.coords, zoom: station.zoom, pitch: station.pitch, bearing: station.bearing, duration: 2800 });
+
+    tourMap3D.flyTo({
+        center: station.coords,
+        zoom: station.zoom,
+        pitch: station.pitch,
+        bearing: station.bearing,
+        duration: 2800
+    });
+
     const badge = document.getElementById('tour-map-badge-text');
     if (badge) badge.textContent = station.title;
+
     currentStation = index;
+
     updateTourProgress(index, total);
 
-document.querySelectorAll('.tour-station')
-    .forEach(card => card.classList.remove('active'));
+    document.querySelectorAll('.tour-station')
+        .forEach(card => card.classList.remove('active'));
 
-const activeCard =
-document.querySelector(`.tour-station[data-index="${index}"]`);
+    const activeCard =
+        document.querySelector(`.tour-station[data-index="${index}"]`);
 
-if (activeCard) {
-    activeCard.classList.add('active');
+    if (activeCard) {
 
-    activeCard.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-}
+        activeCard.classList.add('active');
+
+        activeCard.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+    }
 }
 
 function setupScrollObserver(stations) {
