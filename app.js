@@ -780,7 +780,7 @@ const TOUR_DATA = {
         defaultZoom: 16,
         stations: [
             {
-                tag: "Einführung",
+                tag: "Introduction",
                 title: "Das Flavische Amphitheater",
                 coords: [12.4922, 41.8902],
                 zoom: 16, pitch: 50, bearing: 30,
@@ -835,7 +835,7 @@ function buildGenericTour(site, lat, lng) {
         defaultZoom: 13,
         stations: [
             {
-                tag: "Einführung",
+                tag: "Introduction",
                 title: siteName,
                 coords: [lng, lat],
                 zoom: 13, pitch: 50, bearing: 20,
