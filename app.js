@@ -931,7 +931,23 @@ function renderTourStations(stations) {
         const div = document.createElement('div');
         div.className = 'tour-station' + (i === 0 ? ' active' : '');
         div.dataset.index = i;
-        div.innerHTML = `
+        div.style.cursor = 'pointer';
+
+div.addEventListener('click', () => {
+
+    // aktive Karte hervorheben
+    document.querySelectorAll('.tour-station')
+        .forEach(card => card.classList.remove('active'));
+
+    div.classList.add('active');
+
+    // Kamera bewegen
+    flyToStation(stations[i], i, stations.length);
+
+    // Progressbar aktualisieren
+    updateTourProgress(i, stations.length);
+
+div.innerHTML = `
             <div class="tour-station-header">
                 <div class="tour-station-number">${i + 1}</div>
                 <div class="tour-station-meta">
