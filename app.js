@@ -675,10 +675,18 @@ searchInput.addEventListener('input', () => {
         map.flyTo([20, 10], 3, { duration: 1.5 });
         activeSite = null;
     });
+  
     document.getElementById('btn-fav').addEventListener('click', () => {
-        if (!activeSite) return;
-        toggleFav(getSiteId(activeSite));
-    });
+    if (!activeSite) return;
+    toggleFav(getSiteId(activeSite));
+});
+
+document.getElementById('btn-reset-xp').addEventListener('click', () => {
+    userXP = 0;
+    localStorage.setItem('chronos_xp', userXP);
+    updateXP();
+});
+   
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('click', e => {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -787,6 +795,8 @@ searchInput.addEventListener('input', () => {
         });
     }
 }
+
+
 
 // ── 15. HELPERS ───────────────────────────────
 function parseCoord(val) {
