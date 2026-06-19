@@ -482,7 +482,7 @@ const lng = parseCoord(site.longitude);
                 <p class="content-text">${dbDescription}</p>
             </div>
             <div class="content-block" id="wiki-extended-block" style="display:none">
-                <div class="content-label">Erweiterte Informationen (Wikipedia)</div>
+                <div class="content-label">Extended Information</div>
                 <p class="content-text" id="wiki-extended-text">Lade zusätzliche Details...</p>
             </div>
             <div id="quiz-placeholder"></div>
