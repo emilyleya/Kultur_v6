@@ -21,6 +21,7 @@ let currentView = 'explore';
 let userXP      = parseInt(localStorage.getItem('chronos_xp'))    || 0;
 let favorites   = JSON.parse(localStorage.getItem('chronos_favs')) || [];
 let mapMarkers  = []; // Globale Variable für die Marker auf der Karte
+let lastRank = "Archivar";
 
 let activeFilters = {
     type: 'all',
