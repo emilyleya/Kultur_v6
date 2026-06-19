@@ -137,11 +137,12 @@ function initApp() {
 
 // Neue Hilfsfunktion für das visuelle Upgrade des Infotextes
 function setupDiscoverNotice() {
-    // Falls du dem Element im HTML eine ID gegeben hast, nutze diese. 
-    // Andernfalls fangen wir das Element über den Standardtext ab:
-    const sidebarHeaders = document.querySelectorAll('.sidebar p, .sidebar div');
-    sidebarHeaders.forEach(el => {
-        if (el.textContent.includes('click a dot to discover the world')) {
+    // Wir suchen gezielt nach kleineren Textelementen in der Sidebar
+    const textElements = document.querySelectorAll('.sidebar p, .sidebar span, .sidebar .subtitle, .sidebar .welcome-text');
+    
+    for (let el of textElements) {
+        // Sicherstellen, dass es exakt unser Hinweistext ist und keine Unterelemente (wie die Liste) hat
+        if (el.textContent.includes('click a dot to discover the world') && el.children.length === 0) {
             el.className = 'discover-notice';
             el.innerHTML = `
                 <span class="discover-dots">
@@ -151,8 +152,9 @@ function setupDiscoverNotice() {
                 </span>
                 <span>click a dot to discover the world</span>
             `;
+            break; // Sobald erwischt, hören wir auf, um nichts anderes zu verändern
         }
-    });
+    }
 }
 
 function initMap() {
