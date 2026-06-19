@@ -1007,6 +1007,7 @@ body.dark .wonder-star-glyph {
     font-size: 12px;
     font-weight: 600;
     padding: 8px 14px;
+    text-align: center;
 }
 
 /* Station cards */
