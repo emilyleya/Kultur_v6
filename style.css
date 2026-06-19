@@ -271,6 +271,7 @@ body.dark .site-name {
     margin-bottom: 10px;
     flex-wrap: wrap;
     align-items: center;
+    size: 9px;
 }
 .badge:not(:last-child)::after {
     content: '·';
