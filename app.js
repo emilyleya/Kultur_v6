@@ -27,6 +27,7 @@ let activeFilters = {
     era: 'all',
     region: 'all'
 };
+let searchQuery = '';
 
 // ── 3.  WONDERS CONFIG (Muss VOR den Funktionen stehen!) ──
 const WORLD_WONDERS = [
@@ -176,6 +177,14 @@ function getFilteredSites() {
             const filterRegion = String(activeFilters.region).toLowerCase();
 
             if (!siteRegion.includes(filterRegion)) return false;
+        }
+
+        // Suchfilter
+        if (searchQuery.trim() !== '') {
+            const q = searchQuery.toLowerCase();
+            const name = String(site.site || site.name_en || '').toLowerCase();
+            const country = String(site.states_name_en || '').toLowerCase();
+            if (!name.includes(q) && !country.includes(q)) return false;
         }
 
         return true;
