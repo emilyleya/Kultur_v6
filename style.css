@@ -1274,3 +1274,18 @@ transition:.3s;
 body.dark .tour-overlay {
     background: var(--bg);
 }
+
+/* Styling für die antiken Dreieck-Weltwunder (▲) */
+.wonder-triangle-glyph {
+    font-size: 12px; /* Etwas kleiner als der Stern, damit die Proportionen stimmen */
+    color: #6a241c;  /* Nutzt deine originale Antike-Farbe (Dunkles Rotbraun) */
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    z-index: 2;
+    animation: wonderPulse 3s infinite ease-in-out;
+}
+
+/* Dunkelmodus-Anpassung für das Dreieck */
+body.dark .wonder-triangle-glyph {
+    color: #fbbf69;  /* Schönes Ockergelb im Dark Mode für bessere Sichtbarkeit */
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
