@@ -638,6 +638,25 @@ function updateXP() {
 }
 
 function bindEvents() {
+
+const searchInput = document.getElementById('site-search');
+
+    if (searchInput) {
+
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            applyFiltering();
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchQuery = e.target.value.trim();
+                applyFiltering();
+            }
+        });
+
+    }
     document.getElementById('btn-theme').addEventListener('click', () => {
         theme = theme === 'light' ? 'dark' : 'light';
         document.body.className = theme === 'dark' ? 'dark' : '';
