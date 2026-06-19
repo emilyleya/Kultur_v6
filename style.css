@@ -421,6 +421,43 @@ body.dark .site-name {
 
 .ctrl-btn:hover { border-color: var(--text-muted); }
 
+/* Styling für den auffälligen Entdecker-Hinweis */
+.discover-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #cf6229; /* Einladender, warmer Ton */
+    margin: 12px 0;
+    animation: gentle-pulse 2s infinite ease-in-out;
+}
+
+/* Die drei farbigen Epochen-Punkte vor dem Text */
+.discover-dots {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.discover-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Exakte Synchronisation mit deinen Kartenfarben */
+.discover-dot.ancient { background-color: #6a241c; }
+.discover-dot.medieval { background-color: #cf6229; }
+.discover-dot.modern { background-color: #fbbf69; }
+
+/* Kleiner Animationseffekt, um die Aufmerksamkeit zu lenken */
+@keyframes gentle-pulse {
+    0% { opacity: 0.85; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.02); }
+    100% { opacity: 0.85; transform: scale(1); }
+}
+
 .custom-marker { background: none; border: none; }
 .marker-wrap { position: relative; width: 14px; height: 14px; }
 /* Heller Modus */
