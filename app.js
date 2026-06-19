@@ -637,16 +637,23 @@ function earnXP(amount) {
 
 // ── 14. EVENTS ────────────────────────────────
 function updateXP() {
-   if (xpPointsEl) xpPointsEl.textContent = userXP;
+    const xpPointsEl = document.getElementById('xp-points');
     const xpFillEl = document.getElementById('xp-fill');
+    const rankEl = document.getElementById('xp-rank');
+
     if (xpPointsEl) xpPointsEl.textContent = userXP;
+
+    const newRank = getRank(userXP);
+    if (rankEl) rankEl.textContent = newRank;
+
     if (xpFillEl) {
         const pct = Math.min((userXP % 500) / 500 * 100, 100);
         xpFillEl.style.width = pct + '%';
-        if (xpPointsEl) xpPointsEl.textContent = userXP;
+    }
 
-const rankEl = document.getElementById('xp-rank');
-if (rankEl) rankEl.textContent = getRank(userXP);
+    if (newRank !== lastRank) {
+        lastRank = newRank;
+        showLevelUp(newRank);
     }
 }
 
