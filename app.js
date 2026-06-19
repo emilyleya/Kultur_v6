@@ -477,7 +477,17 @@ function getRank(xp) {
 // Fallback, falls showLevelUp global aufgerufen wird, aber im HTML/CSS fehlt
 function showLevelUp(rank) {
     console.log("🎉 Level Up! Neuer Rang:", rank);
-    // Hier kannst du optional eine kleine Alert-Box oder Animation triggern
+
+    // Konfetti-Explosion in der Bildschirmmitte triggern
+    if (typeof confetti === 'function') {
+        confetti({
+            particleCount: 150,  // Anzahl der Schnipsel
+            spread: 80,          // Wie weit sie streuen
+            origin: { x: 0.5, y: 0.5 }, // Exakt die Bildschirmmitte (0.5 = 50%)
+            colors: ['#6a241c', '#cf6229', '#fbbf69', '#2e7d32', '#ffffff'], // Passend zu deinen Epochen-Farben!
+            disableForReducedMotion: true // Höflich gegenüber Nutzern mit紀Barrierefreiheits-Einstellungen
+        });
+    }
 }
 
 // ── 10. DETAILS ────────────────────────────────
