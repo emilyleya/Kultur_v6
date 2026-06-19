@@ -828,21 +828,81 @@ function getTourDataForSite(site) {
 }
 
 function buildGenericTour(site, lat, lng) {
-    const siteName = site.site || site.name_en || 'Diese Stätte';
-    const desc     = site.short_description_en || 'Eine bedeutende UNESCO-Welterbestätte.';
+    const siteName = site.site || site.name_en || 'This Site';
+    const desc = site.short_description_en || 'An important UNESCO World Heritage Site.';
+
+    const country = site.states_name_en || '–';
+    const region = site.region_en || '–';
+    const year = site.date_inscribed || '–';
+    const area = site.area_hectares || '–';
+
     return {
         mapCenter: [lng, lat],
-        defaultZoom: 13,
+        defaultZoom: 12,
         stations: [
+
             {
                 tag: "Introduction",
                 title: siteName,
                 coords: [lng, lat],
-                zoom: 13, pitch: 50, bearing: 20,
+                zoom: 10,
+                pitch: 40,
+                bearing: 0,
                 text: desc,
                 facts: [
-                    { icon: "📅", label: "registered", text: String(site.date_inscribed || '–') },
-                    { icon: "🌐", label: "Land", text: site.states_name_en || '–' }
+                    { icon: "🌍", label: "Country", text: country }
+                ]
+            },
+
+            {
+                tag: "Landscape",
+                title: "Landscape & Setting",
+                coords: [lng + 0.05, lat + 0.03],
+                zoom: 8,
+                pitch: 60,
+                bearing: 60,
+                text: `${siteName} is closely connected to its surrounding landscape and cultural environment, which shaped its development over centuries.`,
+                facts: [
+                    { icon: "🗺️", label: "Region", text: region }
+                ]
+            },
+
+            {
+                tag: "Perspective",
+                title: "A Different View",
+                coords: [lng - 0.03, lat + 0.02],
+                zoom: 12,
+                pitch: 75,
+                bearing: 140,
+                text: `Viewed from different perspectives, ${siteName} reveals why it is considered part of humanity's shared heritage.`,
+                facts: [
+                    { icon: "📏", label: "Area", text: area + " ha" }
+                ]
+            },
+
+            {
+                tag: "History",
+                title: "Historical Significance",
+                coords: [lng + 0.02, lat - 0.03],
+                zoom: 13,
+                pitch: 65,
+                bearing: 220,
+                text: `${siteName} reflects important chapters of human history and preserves traditions, architecture, or natural values that continue to inspire today.`,
+                facts: [
+                    { icon: "🏛️", label: "UNESCO since", text: year }
+                ]
+            },
+
+            {
+                tag: "Legacy",
+                title: "A Legacy for Future Generations",
+                coords: [lng, lat],
+                zoom: 11,
+                pitch: 85,
+                bearing: 320,
+                text: `Today, ${siteName} stands as a symbol of global heritage and remains protected for future generations to discover and appreciate.`,
+                facts: [
+                    { icon: "✨", label: "Status", text: "World Heritage Site" }
                 ]
             }
         ]
