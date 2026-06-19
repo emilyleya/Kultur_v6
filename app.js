@@ -927,22 +927,53 @@ function openTourOverlay() {
 function renderTourStations(stations) {
     const container = document.getElementById('tour-stations');
     container.innerHTML = '';
+
     stations.forEach((s, i) => {
+
         const div = document.createElement('div');
         div.className = 'tour-station' + (i === 0 ? ' active' : '');
         div.dataset.index = i;
         div.style.cursor = 'pointer';
 
-div.addEventListener('click', () => {
+        div.innerHTML = `
+            <div class="tour-station-header">
+                <div class="tour-station-number">${i + 1}</div>
 
-    // aktive Karte hervorheben
-    document.querySelectorAll('.tour-station')
-        .forEach(card => card.classList.remove('active'));
+                <div class="tour-station-meta">
+                    <div class="tour-station-tag">${s.tag}</div>
+                    <div class="tour-station-title">${s.title}</div>
+                </div>
+            </div>
 
-    div.classList.add('active');
+            <div class="tour-station-body">
+                <p class="tour-station-text">${s.text}</p>
+            </div>
+        `;
 
-    // Kamera bewegen
-    flyToStation(stations[i], i, stations.length);
+        div.addEventListener('click', () => {
+
+            // aktive Karte hervorheben
+            document.querySelectorAll('.tour-station')
+                .forEach(card => card.classList.remove('active'));
+
+            div.classList.add('active');
+
+            // Kamera bewegen
+            flyToStation(s, i, stations.length);
+
+            // Progressbar
+            updateTourProgress(i, stations.length);
+
+            // Karte in Liste sichtbar halten
+            div.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        });
+
+        container.appendChild(div);
+    });
+}
     
 function updateTourProgress(index, total) {
 
@@ -1017,6 +1048,22 @@ function flyToStation(station, index, total) {
     const badge = document.getElementById('tour-map-badge-text');
     if (badge) badge.textContent = station.title;
     currentStation = index;
+    updateTourProgress(index, total);
+
+document.querySelectorAll('.tour-station')
+    .forEach(card => card.classList.remove('active'));
+
+const activeCard =
+document.querySelector(`.tour-station[data-index="${index}"]`);
+
+if (activeCard) {
+    activeCard.classList.add('active');
+
+    activeCard.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+}
 }
 
 function setupScrollObserver(stations) {
