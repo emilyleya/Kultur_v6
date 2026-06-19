@@ -92,6 +92,33 @@ button { font-family: inherit; cursor: pointer; }
     gap: 5px;
 }
 
+.header-search {
+    flex: 1;
+    max-width: 320px;
+    margin: 0 24px;
+}
+
+.search-input {
+    width: 100%;
+    background: var(--surface-inset);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    padding: 8px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.search-input:focus {
+    border-color: var(--accent);
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+}
+
 .xp-label {
     font-size: 12px;
     font-weight: 600;
