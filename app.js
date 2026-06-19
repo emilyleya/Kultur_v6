@@ -943,7 +943,18 @@ div.addEventListener('click', () => {
 
     // Kamera bewegen
     flyToStation(stations[i], i, stations.length);
+    
+function updateTourProgress(index, total) {
 
+    const pct = ((index + 1) / total) * 100;
+
+    document.getElementById('tour-progress-fill').style.width = pct + '%';
+
+    document.getElementById(
+        'tour-progress-label'
+    ).textContent = `Station ${index + 1} / ${total}`;
+
+}
     // Progressbar aktualisieren
     updateTourProgress(i, stations.length);
 
