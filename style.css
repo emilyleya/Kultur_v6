@@ -256,12 +256,13 @@ body.dark .site-name {
 
 .back-btn {
     background: none;
-    border: none;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
     color: var(--accent);
     font-size: 12px;
     font-weight: 600;
     margin-bottom: 14px;
-    padding: 0;
+    padding: 6px 14px;
 }
 
 .detail-badges {
