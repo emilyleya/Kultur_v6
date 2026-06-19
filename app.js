@@ -21,7 +21,7 @@ let currentView = 'explore';
 let userXP      = parseInt(localStorage.getItem('chronos_xp'))    || 0;
 let favorites   = JSON.parse(localStorage.getItem('chronos_favs')) || [];
 let mapMarkers  = []; // Globale Variable für die Marker auf der Karte
-let lastRank = "Archivar";
+let lastRank    = "Archivar";
 
 let activeFilters = {
     type: 'all',
@@ -112,9 +112,9 @@ async function loadSites() {
         const { data, error } = await supabaseClient.from('heritage_sites').select('*');
         if (error) throw error;
         sites = [
-    ...data,
-    ...WORLD_WONDERS
-];
+            ...data,
+            ...WORLD_WONDERS
+        ];
         initApp();
     } catch (err) {
         console.error('Supabase Fehler:', err.message);
@@ -124,7 +124,7 @@ async function loadSites() {
 // ── 5. INIT ───────────────────────────────────
 function initApp() {
     initMap();
-    updateMarkers(); // KORREKTUR: updateMarkers statt addMarkers aufrufen!
+    updateMarkers(); 
     renderExploreList();
     renderFavList();
     updateXP();
@@ -158,11 +158,9 @@ function getSiteEra(site) {
 
 function getFilteredSites() {
     return sites.filter(site => {
-
         // Typfilter
         if (activeFilters.type !== 'all') {
             const wonder = isWorldWonder(site);
-
             if (activeFilters.type === 'wonder' && !wonder) return false;
             if (activeFilters.type === 'heritage' && wonder) return false;
         }
@@ -176,7 +174,6 @@ function getFilteredSites() {
         if (activeFilters.region !== 'all') {
             const siteRegion = String(site.region_en || site.region || '').toLowerCase();
             const filterRegion = String(activeFilters.region).toLowerCase();
-
             if (!siteRegion.includes(filterRegion)) return false;
         }
 
@@ -196,7 +193,6 @@ function getFilteredSites() {
 function updateMarkers() {
     if (!map) return;
 
-    // Vorherige Marker von der Karte entfernen
     mapMarkers.forEach(m => map.removeLayer(m));
     mapMarkers = [];
 
@@ -215,14 +211,12 @@ function updateMarkers() {
                 iconSize: [24, 24], iconAnchor: [12, 12]
             });
         } else {
-            // Ermittle die Epoche für die dynamische Farbe des Punktes
             const era = getSiteEra(site);
-            let markerColor = '#FF8C42'; // Standard-Fallback (Orange)
+            let markerColor = '#FF8C42'; 
             
-            // KORREKTUR: Synchronisation mit den echten Farben aus deiner style.css!
-            if (era === 'ancient')  markerColor = '#6a241c'; // Dunkles Rotbraun (Antike)
-            if (era === 'medieval') markerColor = '#cf6229'; // Sattes Orange (Mittelalter)
-            if (era === 'modern')   markerColor = '#fbbf69'; // Ockergelb (Neuzeit)
+            if (era === 'ancient')  markerColor = '#6a241c'; 
+            if (era === 'medieval') markerColor = '#cf6229'; 
+            if (era === 'modern')   markerColor = '#fbbf69'; 
 
             icon = L.divIcon({
                 className: 'custom-marker',
@@ -238,10 +232,6 @@ function updateMarkers() {
         mapMarkers.push(marker);
     });
 }
-
-
-
-
 
 function applyFiltering() {
     updateMarkers();
@@ -367,7 +357,7 @@ function injectAdvancedQuiz(site, wikiText) {
             quizPool.push({
                 question: `According to historical records, in which century did this site play a significant role?`,
                 correct: correctCentury,
-                wrongs: centuries.filter(c => c !== correctCentury).slice(0, 3)
+                wrong: centuries.filter(c => c !== correctCentury).slice(0, 3)
             });
         }
     }
@@ -377,7 +367,7 @@ function injectAdvancedQuiz(site, wikiText) {
         quizPool.push({
             question: `Which primary building material or geological feature is highlighted in the information text?`,
             correct: material,
-            wrongs: ["Wooden structures", "Concrete foundations", "Cast iron ornaments"].filter(m => m !== material)
+            wrong: ["Wooden structures", "Concrete foundations", "Cast iron ornaments"].filter(m => m !== material)
         });
     }
 
@@ -385,7 +375,7 @@ function injectAdvancedQuiz(site, wikiText) {
         quizPool.push({
             question: `In which official UNESCO region is "${site.site || site.name_en}" geographically classified?`,
             correct: site.region_en,
-            wrongs: ['Europe and North America', 'Asia and the Pacific', 'Latin America and the Caribbean', 'Africa', 'Arab States'].filter(r => r !== site.region_en)
+            wrong: ['Europe and North America', 'Asia and the Pacific', 'Latin America and the Caribbean', 'Africa', 'Arab States'].filter(r => r !== site.region_en)
         });
     }
 
@@ -400,13 +390,13 @@ function injectAdvancedQuiz(site, wikiText) {
         quizPool.push({
             question: `In which year was this site officially inscribed onto the UNESCO World Heritage list?`,
             correct: String(correctYear),
-            wrongs: [...yearWrongs]
+            wrong: [...yearWrongs]
         });
     }
 
     if (quizPool.length === 0) return;
     const selectedQuiz = quizPool[Math.floor(Math.random() * quizPool.length)];
-    const options = [selectedQuiz.correct, ...selectedQuiz.wrongs].sort(() => Math.random() - 0.5);
+    const options = [selectedQuiz.correct, ...selectedQuiz.wrong].sort(() => Math.random() - 0.5);
 
     quizContainer.innerHTML = `
         <div class="quiz-card" id="quiz-card">
@@ -457,6 +447,12 @@ function getRank(xp) {
     return "Archivar";
 }
 
+// Fallback, falls showLevelUp global aufgerufen wird, aber im HTML/CSS fehlt
+function showLevelUp(rank) {
+    console.log("🎉 Level Up! Neuer Rang:", rank);
+    // Hier kannst du optional eine kleine Alert-Box oder Animation triggern
+}
+
 // ── 10. DETAILS ────────────────────────────────
 async function showDetails(site, coords) {
     if (!site) return;
@@ -475,8 +471,6 @@ async function showDetails(site, coords) {
     const titleEl    = document.getElementById('detail-title');
     const metaEl     = document.getElementById('detail-meta');
     const favBtnEl   = document.getElementById('btn-fav');
-    const lat = parseCoord(site.latitude);
-const lng = parseCoord(site.longitude);
 
     if (countryEl)  countryEl.textContent  = site.states_name_en || 'Weltweit';
     if (categoryEl) categoryEl.textContent = site.category || 'UNESCO';
@@ -545,20 +539,16 @@ function renderExploreList() {
         const id    = getSiteId(site);
         const isFav = favorites.includes(id);
         
-        // Ermittle die Epoche für die Farbe des Listen-Dots
         const era = getSiteEra(site);
-        let dotColor = '#FF8C42'; // Fallback (Orange)
+        let dotColor = '#FF8C42'; 
         
-        // SYNCHRONISATION mit den Farben der Karte und deiner style.css
-        if (era === 'ancient')  dotColor = '#6a241c'; // Dunkles Rotbraun
-        if (era === 'medieval') dotColor = '#cf6229'; // Sattes Orange
-        if (era === 'modern')   dotColor = '#fbbf69'; // Ockergelb
+        if (era === 'ancient')  dotColor = '#6a241c'; 
+        if (era === 'medieval') dotColor = '#cf6229'; 
+        if (era === 'modern')   dotColor = '#fbbf69'; 
 
         const btn   = document.createElement('button');
         btn.className = 'site-item';
         
-        // Wir setzen nur die Farbe für den Dot dynamisch, nicht für das ganze Element,
-        // damit der Text lesbar und clean bleibt.
         btn.innerHTML = `
             <span class="site-dot" style="color: ${dotColor}">●</span>
             <div class="site-body">
@@ -580,7 +570,10 @@ function renderExploreList() {
 function renderFavList() {
     const container = document.getElementById('fav-list');
     if (!container) return;
-    document.getElementById('fav-count').textContent = favorites.length;
+    
+    const countEl = document.getElementById('fav-count');
+    if (countEl) countEl.textContent = favorites.length;
+
     container.innerHTML = '';
     if (favorites.length === 0) {
         container.innerHTML = '<div class="empty-state">Noch keine Favoriten hinzugefügt.</div>';
@@ -591,10 +584,10 @@ function renderFavList() {
         if (!site) return;
 
         const era = getSiteEra(site);
-let dotColor = '#FF8C42';
-if (era === 'ancient')  dotColor = '#6a241c';
-if (era === 'medieval') dotColor = '#cf6229';
-if (era === 'modern')   dotColor = '#fbbf69';
+        let dotColor = '#FF8C42';
+        if (era === 'ancient')  dotColor = '#6a241c';
+        if (era === 'medieval') dotColor = '#cf6229';
+        if (era === 'modern')   dotColor = '#fbbf69';
 
         const item = document.createElement('button');
         item.className = 'site-item';
@@ -624,8 +617,10 @@ function toggleFav(id) {
     localStorage.setItem('chronos_favs', JSON.stringify(favorites));
     renderExploreList();
     renderFavList();
-    if (activeSite && getSiteId(activeSite) === id) {
-        document.getElementById('btn-fav').textContent = favorites.includes(id) ? '★' : '☆';
+    
+    const favBtnEl = document.getElementById('btn-fav');
+    if (favBtnEl && activeSite && getSiteId(activeSite) === id) {
+        favBtnEl.textContent = favorites.includes(id) ? '★' : '☆';
     }
 }
 
@@ -659,11 +654,8 @@ function updateXP() {
 }
 
 function bindEvents() {
-
-const searchInput = document.getElementById('site-search');
-
+    const searchInput = document.getElementById('site-search');
     if (searchInput) {
-
         searchInput.addEventListener('input', (e) => {
             searchQuery = e.target.value;
             applyFiltering();
@@ -676,45 +668,67 @@ const searchInput = document.getElementById('site-search');
                 applyFiltering();
             }
         });
-searchInput.addEventListener('input', () => {
-    map.closePopup?.();
-});
-        document.addEventListener('submit', (e) => {
-    e.preventDefault();
-});
+        searchInput.addEventListener('input', () => {
+            map.closePopup?.();
+        });
     }
-    document.getElementById('btn-theme').addEventListener('click', () => {
-        theme = theme === 'light' ? 'dark' : 'light';
-        document.body.className = theme === 'dark' ? 'dark' : '';
-        tileLayer.setUrl(TILE_LAYERS[theme]);
-    });
-    document.getElementById('btn-zoom-in').addEventListener('click',  () => map.zoomIn());
-    document.getElementById('btn-zoom-out').addEventListener('click', () => map.zoomOut());
-    document.getElementById('btn-back').addEventListener('click', () => {
-        document.getElementById('panel-details').classList.remove('active');
-        document.getElementById('panel-welcome').classList.add('active');
-        map.flyTo([20, 10], 3, { duration: 1.5 });
-        activeSite = null;
-    });
-  
-    document.getElementById('btn-fav').addEventListener('click', () => {
-    if (!activeSite) return;
-    toggleFav(getSiteId(activeSite));
-});
 
-document.getElementById('btn-reset-xp').addEventListener('click', () => {
-    userXP = 0;
-    localStorage.setItem('chronos_xp', userXP);
-    updateXP();
-});
+    // Submit-Absicherung
+    document.addEventListener('submit', (e) => { e.preventDefault(); });
+
+    // Buttons absichern & registrieren
+    const btnTheme = document.getElementById('btn-theme');
+    if (btnTheme) {
+        btnTheme.addEventListener('click', () => {
+            theme = theme === 'light' ? 'dark' : 'light';
+            document.body.className = theme === 'dark' ? 'dark' : '';
+            tileLayer.setUrl(TILE_LAYERS[theme]);
+        });
+    }
+
+    const btnZoomIn = document.getElementById('btn-zoom-in');
+    if (btnZoomIn) btnZoomIn.addEventListener('click', () => map.zoomIn());
+
+    const btnZoomOut = document.getElementById('btn-zoom-out');
+    if (btnZoomOut) btnZoomOut.addEventListener('click', () => map.zoomOut());
+
+    const btnBack = document.getElementById('btn-back');
+    if (btnBack) {
+        btnBack.addEventListener('click', () => {
+            document.getElementById('panel-details').classList.remove('active');
+            document.getElementById('panel-welcome').classList.add('add', 'active');
+            map.flyTo([20, 10], 3, { duration: 1.5 });
+            activeSite = null;
+        });
+    }
+  
+    const btnFav = document.getElementById('btn-fav');
+    if (btnFav) {
+        btnFav.addEventListener('click', () => {
+            if (!activeSite) return;
+            toggleFav(getSiteId(activeSite));
+        });
+    }
+
+    const btnResetXp = document.getElementById('btn-reset-xp');
+    if (btnResetXp) {
+        btnResetXp.addEventListener('click', () => {
+            userXP = 0;
+            localStorage.setItem('chronos_xp', userXP);
+            updateXP();
+        });
+    }
    
     document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('click', e => {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             e.currentTarget.classList.add('active');
             currentView = e.currentTarget.dataset.view;
-            document.getElementById('view-explore').style.display   = currentView === 'explore'   ? 'flex' : 'none';
-            document.getElementById('view-favorites').style.display = currentView === 'favorites' ? 'block' : 'none';
+            
+            const exploreView = document.getElementById('view-explore');
+            const favView = document.getElementById('view-favorites');
+            if (exploreView) exploreView.style.display = currentView === 'explore' ? 'flex' : 'none';
+            if (favView) favView.style.display = currentView === 'favorites' ? 'block' : 'none';
         });
     });
 
@@ -728,16 +742,18 @@ document.getElementById('btn-reset-xp').addEventListener('click', () => {
                 activeFilters.era = 'all';
                 activeFilters.region = 'all';
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                document.querySelector('[data-filter-val="all"]').classList.add('active');
+                const allBtn = document.querySelector('[data-filter-val="all"]');
+                if (allBtn) allBtn.classList.add('active');
             } else {
-                document.querySelector('[data-filter-val="all"]').classList.remove('active');
+                const allBtn = document.querySelector('[data-filter-val="all"]');
+                if (allBtn) allBtn.classList.remove('active');
                 
                 if (e.currentTarget.classList.contains('active')) {
                     e.currentTarget.classList.remove('active');
                     activeFilters[type] = 'all';
                     
                     const anyActive = Object.values(activeFilters).some(v => v !== 'all');
-                    if (!anyActive) document.querySelector('[data-filter-val="all"]').classList.add('active');
+                    if (!anyActive && allBtn) allBtn.classList.add('active');
                 } else {
                     document.querySelectorAll(`.filter-btn[data-filter-type="${type}"]`).forEach(b => b.classList.remove('active'));
                     e.currentTarget.classList.add('active');
@@ -792,7 +808,6 @@ document.getElementById('btn-reset-xp').addEventListener('click', () => {
                 
             } else if (targetTab === 'tab-geo') {
                 if (descEl) descEl.innerHTML = '';
-                
                 if (geoEl) {
                     geoEl.innerHTML = `
                         <div class="content-block">
@@ -808,16 +823,20 @@ document.getElementById('btn-reset-xp').addEventListener('click', () => {
 
     const sidebar = document.querySelector('.sidebar');
     const toggleBtn = document.getElementById('btn-toggle-sidebar');
-    
     if (toggleBtn && sidebar) {
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
             setTimeout(() => { map.invalidateSize(); }, 400);
         });
     }
+
+    // Virtuelle Tour Buttons
+    const btnStartTour = document.getElementById('btn-start-tour');
+    if (btnStartTour) btnStartTour.addEventListener('click', openTourOverlay);
+
+    const btnCloseTour = document.getElementById('btn-close-tour');
+    if (btnCloseTour) btnCloseTour.addEventListener('click', closeTourOverlay);
 }
-
-
 
 // ── 15. HELPERS ───────────────────────────────
 function parseCoord(val) {
@@ -826,18 +845,12 @@ function parseCoord(val) {
     return isNaN(num) ? null : num;
 }
 
-// KORREKTUR: Eindeutiger Spaltenabgleich für IDs
 function getSiteId(site) {
     if (!site) return null;
     return site.id || site.id_no || site.unique_number || null;
 }
 
-// ── START ANSTOSSEN ───────────────────────────
-loadSites();
-
-// ══════════════════════════════════════════════════════════════
-//  VIRTUAL TOUR SYSTEM
-// ══════════════════════════════════════════════════════════════
+// ── VIRTUAL TOUR SYSTEM ─────────────────────────
 const TOUR_DATA = {
     "colosseum": {
         mapCenter: [12.4922, 41.8902],
@@ -894,7 +907,6 @@ function getTourDataForSite(site) {
 function buildGenericTour(site, lat, lng) {
     const siteName = site.site || site.name_en || 'This Site';
     const desc = site.short_description_en || 'An important UNESCO World Heritage Site.';
-
     const country = site.states_name_en || '–';
     const region = site.region_en || '–';
     const year = site.date_inscribed || '–';
@@ -904,70 +916,45 @@ function buildGenericTour(site, lat, lng) {
         mapCenter: [lng, lat],
         defaultZoom: 12,
         stations: [
-
             {
                 tag: "Introduction",
                 title: siteName,
                 coords: [lng, lat],
-                zoom: 10,
-                pitch: 40,
-                bearing: 0,
+                zoom: 10, pitch: 40, bearing: 0,
                 text: desc,
-                facts: [
-                    { icon: "🌍", label: "Country", text: country }
-                ]
+                facts: [{ icon: "🌍", label: "Country", text: country }]
             },
-
             {
                 tag: "Landscape",
                 title: "Landscape & Setting",
                 coords: [lng + 0.05, lat + 0.03],
-                zoom: 8,
-                pitch: 60,
-                bearing: 60,
+                zoom: 8, pitch: 60, bearing: 60,
                 text: `${siteName} is closely connected to its surrounding landscape and cultural environment, which shaped its development over centuries.`,
-                facts: [
-                    { icon: "🗺️", label: "Region", text: region }
-                ]
+                facts: [{ icon: "🗺️", label: "Region", text: region }]
             },
-
             {
                 tag: "Perspective",
                 title: "A Different View",
                 coords: [lng - 0.03, lat + 0.02],
-                zoom: 12,
-                pitch: 75,
-                bearing: 140,
+                zoom: 12, pitch: 75, bearing: 140,
                 text: `Viewed from different perspectives, ${siteName} reveals why it is considered part of humanity's shared heritage.`,
-                facts: [
-                    { icon: "📏", label: "Area", text: area + " ha" }
-                ]
+                facts: [{ icon: "📏", label: "Area", text: area + " ha" }]
             },
-
             {
                 tag: "History",
                 title: "Historical Significance",
                 coords: [lng + 0.02, lat - 0.03],
-                zoom: 13,
-                pitch: 65,
-                bearing: 220,
+                zoom: 13, pitch: 65, bearing: 220,
                 text: `${siteName} reflects important chapters of human history and preserves traditions, architecture, or natural values that continue to inspire today.`,
-                facts: [
-                    { icon: "🏛️", label: "UNESCO since", text: year }
-                ]
+                facts: [{ icon: "🏛️", label: "UNESCO since", text: year }]
             },
-
             {
                 tag: "Legacy",
                 title: "A Legacy for Future Generations",
                 coords: [lng, lat],
-                zoom: 11,
-                pitch: 85,
-                bearing: 320,
+                zoom: 11, pitch: 85, bearing: 320,
                 text: `Today, ${siteName} stands as a symbol of global heritage and remains protected for future generations to discover and appreciate.`,
-                facts: [
-                    { icon: "✨", label: "Status", text: "World Heritage Site" }
-                ]
+                facts: [{ icon: "✨", label: "Status", text: "World Heritage Site" }]
             }
         ]
     };
@@ -977,6 +964,8 @@ function openTourOverlay() {
     if (!activeSite) return;
     const tourData = getTourDataForSite(activeSite);
     const overlay = document.getElementById('tour-overlay');
+    if (!overlay) return;
+    
     document.getElementById('tour-site-name').textContent = activeSite.site || activeSite.name_en || 'Tour';
 
     renderTourStations(tourData.stations);
@@ -989,12 +978,11 @@ function openTourOverlay() {
 }
 
 function renderTourStations(stations) {
-
     const container = document.getElementById('tour-stations');
+    if (!container) return;
     container.innerHTML = '';
 
     stations.forEach((s, i) => {
-
         const div = document.createElement('div');
         div.className = 'tour-station' + (i === 0 ? ' active' : '');
         div.dataset.index = i;
@@ -1003,51 +991,35 @@ function renderTourStations(stations) {
         div.innerHTML = `
             <div class="tour-station-header">
                 <div class="tour-station-number">${i + 1}</div>
-
                 <div class="tour-station-meta">
                     <div class="tour-station-tag">${s.tag}</div>
                     <div class="tour-station-title">${s.title}</div>
                 </div>
             </div>
-
             <div class="tour-station-body">
                 <p class="tour-station-text">${s.text}</p>
             </div>
         `;
 
         div.addEventListener('click', () => {
-
-            document.querySelectorAll('.tour-station')
-                .forEach(card => card.classList.remove('active'));
-
+            document.querySelectorAll('.tour-station').forEach(card => card.classList.remove('active'));
             div.classList.add('active');
-
             flyToStation(s, i, stations.length);
-
             updateTourProgress(i, stations.length);
-
-            div.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-
+            div.scrollIntoView({ behavior: "smooth", block: "center" });
         });
 
         container.appendChild(div);
-
     });
-
 }
     
 function updateTourProgress(index, total) {
-
+    const fill = document.getElementById('tour-progress-fill');
+    const label = document.getElementById('tour-progress-label');
     const pct = ((index + 1) / total) * 100;
 
-    document.getElementById('tour-progress-fill').style.width =
-        pct + '%';
-
-    document.getElementById('tour-progress-label').textContent =
-        `Station ${index + 1} / ${total}`;
+    if (fill) fill.style.width = pct + '%';
+    if (label) label.textContent = `Station ${index + 1} / ${total}`;
 }
 
 function initTourMap(tourData) {
@@ -1068,7 +1040,6 @@ function initTourMap(tourData) {
 }
 
 function flyToStation(station, index, total) {
-
     if (!tourMap3D) return;
 
     tourMap3D.flyTo({
@@ -1083,23 +1054,14 @@ function flyToStation(station, index, total) {
     if (badge) badge.textContent = station.title;
 
     currentStation = index;
-
     updateTourProgress(index, total);
 
-    document.querySelectorAll('.tour-station')
-        .forEach(card => card.classList.remove('active'));
-
-    const activeCard =
-        document.querySelector(`.tour-station[data-index="${index}"]`);
+    document.querySelectorAll('.tour-station').forEach(card => card.classList.remove('active'));
+    const activeCard = document.querySelector(`.tour-station[data-index="${index}"]`);
 
     if (activeCard) {
-
         activeCard.classList.add('active');
-
-        activeCard.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
+        activeCard.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 }
 
@@ -1107,6 +1069,8 @@ function setupScrollObserver(stations) {
     if (tourObserver) tourObserver.disconnect();
     const pane = document.getElementById('tour-story-pane');
     const cards = document.querySelectorAll('.tour-station');
+    if (!pane || cards.length === 0) return;
+
     tourObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -1120,16 +1084,24 @@ function setupScrollObserver(stations) {
 
 function closeTourOverlay() {
     const overlay = document.getElementById('tour-overlay');
+    if (!overlay) return;
     overlay.classList.add('fade-out');
     setTimeout(() => {
-        overlay.classList.remove('fade-out'); overlay.classList.add('hidden');
-        document.body.style.overflow = ''; tourActive = false;
+        overlay.classList.remove('fade-out'); 
+        overlay.classList.add('hidden');
+        document.body.style.overflow = ''; 
+        tourActive = false;
         if (tourObserver) { tourObserver.disconnect(); tourObserver = null; }
     }, 300);
 }
 
+// ── DOM READY START TRIGGER ─────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('btn-start-tour').addEventListener('click', openTourOverlay);
-    document.getElementById('btn-close-tour').addEventListener('click', closeTourOverlay);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && tourActive) closeTourOverlay(); });
+    // Esc-Key Absicherung
+    document.addEventListener('keydown', e => { 
+        if (e.key === 'Escape' && tourActive) closeTourOverlay(); 
+    });
+    
+    // Startet das Laden erst, wenn das Dokument bereit ist
+    loadSites();
 });
