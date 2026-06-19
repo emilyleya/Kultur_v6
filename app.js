@@ -439,12 +439,13 @@ function bindQuizEvents() {
 }
 
 function getRank(xp) {
-    if (xp < 100) return "Novize";
-    if (xp < 300) return "Chronist";
-    if (xp < 600) return "Forscher";
-    if (xp < 1000) return "Kartograf";
-    if (xp < 2000) return "Archäologe";
-    return "Archivar";
+    if (xp < 100) return "Wanderer";
+    if (xp < 300) return "Traveler";
+    if (xp < 600) return "Adventurer";
+    if (xp < 1000) return "Cartographer";
+    if (xp < 2000) return "Worldmaster";
+    return "Explorer";
+
 }
 
 // Fallback, falls showLevelUp global aufgerufen wird, aber im HTML/CSS fehlt
