@@ -925,6 +925,7 @@ function openTourOverlay() {
 }
 
 function renderTourStations(stations) {
+
     const container = document.getElementById('tour-stations');
     container.innerHTML = '';
 
@@ -952,59 +953,39 @@ function renderTourStations(stations) {
 
         div.addEventListener('click', () => {
 
-            // aktive Karte hervorheben
             document.querySelectorAll('.tour-station')
                 .forEach(card => card.classList.remove('active'));
 
             div.classList.add('active');
 
-            // Kamera bewegen
             flyToStation(s, i, stations.length);
 
-            // Progressbar
             updateTourProgress(i, stations.length);
 
-            // Karte in Liste sichtbar halten
             div.scrollIntoView({
                 behavior: "smooth",
                 block: "center"
             });
+
         });
 
         container.appendChild(div);
+
     });
+
 }
     
 function updateTourProgress(index, total) {
 
     const pct = ((index + 1) / total) * 100;
 
-    document.getElementById('tour-progress-fill').style.width = pct + '%';
+    document.getElementById('tour-progress-fill').style.width =
+        pct + '%';
 
-    document.getElementById(
-        'tour-progress-label'
-    ).textContent = `Station ${index + 1} / ${total}`;
-
+    document.getElementById('tour-progress-label').textContent =
+        `Station ${index + 1} / ${total}`;
 }
 
-    document.querySelectorAll('.tour-station')
-.forEach(card => card.classList.remove('active'));
-
-const activeCard =
-document.querySelector(
-`.tour-station[data-index="${index}"]`
-);
-
-if(activeCard){
-
-    activeCard.classList.add('active');
-
-    activeCard.scrollIntoView({
-        behavior:"smooth",
-        block:"center"
-    });
-
-}
     
     // Progressbar aktualisieren
     updateTourProgress(i, stations.length);
