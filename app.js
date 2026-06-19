@@ -986,26 +986,6 @@ function updateTourProgress(index, total) {
         `Station ${index + 1} / ${total}`;
 }
 
-    
-    // Progressbar aktualisieren
-    updateTourProgress(i, stations.length);
-
-div.innerHTML = `
-            <div class="tour-station-header">
-                <div class="tour-station-number">${i + 1}</div>
-                <div class="tour-station-meta">
-                    <div class="tour-station-tag">${s.tag}</div>
-                    <div class="tour-station-title">${s.title}</div>
-                </div>
-            </div>
-            <div class="tour-station-body">
-                <p class="tour-station-text">${s.text}</p>
-            </div>
-        `;
-        container.appendChild(div);
-    });
-}
-
 function initTourMap(tourData) {
     if (tourMap3D) { tourMap3D.remove(); tourMap3D = null; }
     tourMap3D = new maplibregl.Map({
