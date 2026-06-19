@@ -19,7 +19,7 @@
 }
 
 body.dark {
-    --bg:             #141210;
+    --bg:             #7d7974;
     --surface:        rgba(22, 18, 14, 0.96);
     --surface-inset:  rgba(255, 140, 66, 0.06);
     --border:         rgba(255, 255, 255, 0.10);
