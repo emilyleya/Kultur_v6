@@ -270,15 +270,11 @@ body.dark .site-name {
     gap: 6px;
     margin-bottom: 10px;
     flex-wrap: wrap;
+    align-items: center;
 }
-
-.badge {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 3px 9px;
-    border-radius: 5px;
-    background: var(--surface-inset);
-    border: 1px solid var(--border);
+.badge:not(:last-child)::after {
+    content: '·';
+    margin-left: 6px;
     color: var(--text-muted);
 }
 
