@@ -655,7 +655,12 @@ const searchInput = document.getElementById('site-search');
                 applyFiltering();
             }
         });
-
+searchInput.addEventListener('input', () => {
+    map.closePopup?.();
+});
+        document.addEventListener('submit', (e) => {
+    e.preventDefault();
+});
     }
     document.getElementById('btn-theme').addEventListener('click', () => {
         theme = theme === 'light' ? 'dark' : 'light';
