@@ -478,7 +478,7 @@ const lng = parseCoord(site.longitude);
     if (descEl) {
         descEl.innerHTML = `
             <div class="content-block">
-                <div class="content-label">UNESCO Beschreibung</div>
+                <div class="content-label">UNESCO description</div>
                 <p class="content-text">${dbDescription}</p>
             </div>
             <div class="content-block" id="wiki-extended-block" style="display:none">
