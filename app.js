@@ -447,6 +447,15 @@ function bindQuizEvents() {
     });
 }
 
+function getRank(xp) {
+    if (xp < 100) return "Novize";
+    if (xp < 300) return "Chronist";
+    if (xp < 600) return "Forscher";
+    if (xp < 1000) return "Kartograf";
+    if (xp < 2000) return "Archäologe";
+    return "Archivar";
+}
+
 // ── 10. DETAILS ────────────────────────────────
 async function showDetails(site, coords) {
     if (!site) return;
