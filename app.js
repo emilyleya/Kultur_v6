@@ -627,6 +627,36 @@ function renderFavList() {
 
     container.innerHTML = '';
 
+const filteredFavorites = favorites
+    .map(id => sites.find(site => getSiteId(site) === id))
+    .filter(site => site !== undefined)
+    .filter(site => {
+        if (activeFilters.type !== 'all') {
+            const wonder = isWorldWonder(site);
+            if (activeFilters.type === 'wonder' && !wonder) return false;
+            if (activeFilters.type === 'heritage' && wonder) return false;
+        }
+
+        if (activeFilters.era !== 'all') {
+            if (getSiteEra(site) !== activeFilters.era) return false;
+        }
+
+        if (activeFilters.region !== 'all') {
+            const region = String(site.region_en || '').toLowerCase();
+            if (!region.includes(activeFilters.region.toLowerCase())) return false;
+        }
+
+        if (searchQuery.trim() !== '') {
+            const q = searchQuery.toLowerCase();
+            const name = String(site.site || '').toLowerCase();
+            const country = String(site.states_name_en || '').toLowerCase();
+
+            if (!name.includes(q) && !country.includes(q)) return false;
+        }
+
+        return true;
+
+    
     const filteredFavorites = getFilteredSites().filter(site =>
         favorites.includes(getSiteId(site))
     );
