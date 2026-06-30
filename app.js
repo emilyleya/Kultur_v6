@@ -670,7 +670,6 @@ function renderFavList() {
             if (lat !== null && lng !== null) {
                 showDetails(site, [lat, lng]);
             }
-        });
 
         container.appendChild(item);
     });
