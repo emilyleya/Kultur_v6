@@ -861,8 +861,8 @@ function bindEvents() {
                 if (geoEl) {
                     geoEl.innerHTML = `
                         <div class="content-block">
-                            <div class="content-label">Geografische Daten</div>
-                            <p class="content-text"><strong>Fläche:</strong> ${activeSite.area_hectares || '–'} Hektar</p>
+                            <div class="content-label">GEOGRAFIC DATA</div>
+                            <p class="content-text"><strong>Expanse:</strong> ${activeSite.area_hectares || '–'} Hektar</p>
                             <p class="content-text"><strong>Region:</strong> ${activeSite.region_en || '–'}</p>
                         </div>
                     `;
