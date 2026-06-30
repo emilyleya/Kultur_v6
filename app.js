@@ -275,6 +275,7 @@ function updateMarkers() {
 function applyFiltering() {
     updateMarkers();
     renderExploreList();
+    renderFavList(); 
 }
 
 // ── 8. WIKIPEDIA SLIDESHOW & TEXT ─────────────
@@ -620,23 +621,25 @@ function renderExploreList() {
 function renderFavList() {
     const container = document.getElementById('fav-list');
     if (!container) return;
-    
+
     const countEl = document.getElementById('fav-count');
     if (countEl) countEl.textContent = favorites.length;
 
     container.innerHTML = '';
-    if (favorites.length === 0) {
-        container.innerHTML = '<div class="empty-state">Noch keine Favoriten hinzugefügt.</div>';
+
+    const filteredFavorites = getFilteredSites().filter(site =>
+        favorites.includes(getSiteId(site))
+    );
+
+    if (filteredFavorites.length === 0) {
+        container.innerHTML = '<div class="empty-state">Keine Favoriten entsprechen den aktuellen Filtern.</div>';
         return;
     }
 
-favorites.forEach(id => {
-    const site = getFilteredSites().find(s => getSiteId(s) === id);
-    if (!site) return;
+    filteredFavorites.forEach(site => {
 
-    // Karte erzeugen...
-});
-        
+        const id = getSiteId(site);
+
         const era = getSiteEra(site);
         let dotColor = '#FF8C42';
         if (era === 'ancient')  dotColor = '#6a241c';
@@ -645,24 +648,33 @@ favorites.forEach(id => {
 
         const item = document.createElement('button');
         item.className = 'site-item';
+
         item.innerHTML = `
-            <span class="site-dot" style="color: ${dotColor}">●</span>
+            <span class="site-dot" style="color:${dotColor}">●</span>
             <div class="site-body">
                 <div class="site-name">${site.site || site.name_en}</div>
                 <div class="site-meta">${site.states_name_en || 'Weltweit'}</div>
             </div>
             <button class="site-fav" data-id="${id}">✕</button>
         `;
+
         item.addEventListener('click', e => {
-            if (e.target.closest('.site-fav')) { toggleFav(id); return; }
+            if (e.target.closest('.site-fav')) {
+                toggleFav(id);
+                return;
+            }
+
             const lat = parseCoord(site.latitude);
             const lng = parseCoord(site.longitude);
-            if (lat !== null && lng !== null) showDetails(site, [lat, lng]);
+
+            if (lat !== null && lng !== null) {
+                showDetails(site, [lat, lng]);
+            }
         });
+
         container.appendChild(item);
     });
 }
-
 // ── 12. FAVORITES ─────────────────────────────
 function toggleFav(id) {
     const idx = favorites.indexOf(id);
