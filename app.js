@@ -629,10 +629,14 @@ function renderFavList() {
         container.innerHTML = '<div class="empty-state">Noch keine Favoriten hinzugefügt.</div>';
         return;
     }
-    favorites.forEach(id => {
-        const site = sites.find(s => getSiteId(s) === id);
-        if (!site) return;
 
+favorites.forEach(id => {
+    const site = getFilteredSites().find(s => getSiteId(s) === id);
+    if (!site) return;
+
+    // Karte erzeugen...
+});
+        
         const era = getSiteEra(site);
         let dotColor = '#FF8C42';
         if (era === 'ancient')  dotColor = '#6a241c';
