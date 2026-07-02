@@ -686,7 +686,7 @@ function toggleFav(id) {
     renderExploreList();
     renderFavList();
     updateMarkers();
-
+}
 // ── 13. XP ────────────────────────────────────
 function earnXP(amount) {
     userXP += amount;
