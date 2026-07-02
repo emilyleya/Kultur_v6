@@ -655,7 +655,7 @@ const filteredFavorites = favorites
         }
 
         return true;
-
+);
     
     const filteredFavorites = getFilteredSites().filter(site =>
         favorites.includes(getSiteId(site))
