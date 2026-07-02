@@ -222,7 +222,10 @@ function updateMarkers() {
     mapMarkers.forEach(m => map.removeLayer(m));
     mapMarkers = [];
 
-    const filteredSites = getFilteredSites();
+    let filteredSites = getFilteredSites();
+    if (currentView === 'favorites') {
+        filteredSites = filteredSites.filter(site => favorites.includes(getSiteId(site)));
+    }
 
     filteredSites.forEach(site => {
         const lat = parseCoord(site.latitude);
@@ -784,7 +787,7 @@ function bindEvents() {
         });
     }
    
-    document.querySelectorAll('.nav-tab').forEach(tab => {
+   document.querySelectorAll('.nav-tab').forEach(tab => {
         tab.addEventListener('click', e => {
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             e.currentTarget.classList.add('active');
@@ -794,6 +797,7 @@ function bindEvents() {
             const favView = document.getElementById('view-favorites');
             if (exploreView) exploreView.style.display = currentView === 'explore' ? 'flex' : 'none';
             if (favView) favView.style.display = currentView === 'favorites' ? 'block' : 'none';
+            updateMarkers();
         });
     });
 
