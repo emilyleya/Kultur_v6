@@ -685,12 +685,7 @@ function toggleFav(id) {
     localStorage.setItem('chronos_favs', JSON.stringify(favorites));
     renderExploreList();
     renderFavList();
-    
-    const favBtnEl = document.getElementById('btn-fav');
-    if (favBtnEl && activeSite && getSiteId(activeSite) === id) {
-        favBtnEl.textContent = favorites.includes(id) ? '★' : '☆';
-    }
-}
+    updateMarkers();
 
 // ── 13. XP ────────────────────────────────────
 function earnXP(amount) {
